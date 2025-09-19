@@ -4,12 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 import numpy as np
 
+from .base import BaseVector
 
 axtype = np.complex64
 
 
 @dataclass
-class GHVec:
+class GHVec(BaseVector):
     """Hypervector containing per-dimension (m x m) complex matrices.
 
     Attributes:

@@ -33,5 +33,9 @@ htmlcov/
 
 # Sphinx
 docs/_build/
+
+# Local guidance and references (do not commit)
+WARP.md
+references/
 WARP.md
 /reference/

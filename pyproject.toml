@@ -31,12 +31,12 @@ classifiers = [
 dependencies = [
   "numpy>=1.24",
   "scipy>=1.11",
-  "numba>=0.59",
   "typing_extensions>=4.10; python_version < '3.11'",
 ]
 
 [project.optional-dependencies]
 torch = ["torch>=2.0"]
+numba = ["numba>=0.59"]
 dev = [
   "pytest>=7.4",
   "ruff>=0.6.5",

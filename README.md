@@ -14,6 +14,7 @@ Status: Alpha scaffolding with minimal working implementations and tests. APIs a
   uv pip install -e ".[dev]"
 - Optional extras:
   - Torch: uv pip install -e ".[torch]"
+  - Numba (CPU JIT): uv pip install -e ".[numba]"  # enables optional JIT where available
   - Docs: uv pip install -e ".[docs]"
 
 ## Quickstart

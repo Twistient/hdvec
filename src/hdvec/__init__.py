@@ -2,7 +2,10 @@
 
 Minimal, NumPy-first stubs for hyperdimensional vector ops and encoders.
 """
-from .core import bind, bundle, similarity, permute, Config
+__version__ = "0.1.0"
+
+from .core import bind, bundle, similarity, permute
+from .config import Config
 from .fpe import FPEEncoder, generate_base, encode_fpe
 from .vfa import VFAEncoder
 from .ghrr import GHVec, sample_ghrr, gh_bind, gh_bundle, gh_similarity
@@ -33,4 +36,5 @@ __all__ = [
     "decode_point",
     "decode_function",
     "resonator_decode",
+    "__version__",
 ]

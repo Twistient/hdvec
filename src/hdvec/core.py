@@ -4,28 +4,12 @@ Minimal NumPy implementations with optional Numba JIT.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
 
 from .utils import phase_normalize, hermitian_enforce, optional_njit
-
-
-@dataclass
-class Config:
-    """Global settings for hdvec operations.
-
-    Attributes:
-        D: Dimensionality of vectors.
-        backend: "numpy" or "torch" (torch not used in stubs).
-        dtype: Numpy dtype (complex64 by default for phasors).
-        conv_backend: Backend for circular convolution ("fft").
-    """
-    D: int = 1024
-    backend: Literal["numpy", "torch"] = "numpy"
-    dtype: np.dtype = np.complex64
-    conv_backend: Literal["fft"] = "fft"
+from .config import Config
 
 
 @optional_njit(cache=True)
