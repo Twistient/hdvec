@@ -2,19 +2,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List
 
 import numpy as np
 
-from .fpe import generate_base, encode_fpe
-from .core import bind
-from .utils import phase_normalize
 from .base import Vec
+from .core import bind
+from .fpe import encode_fpe, generate_base
+from .utils import phase_normalize
 
 
 @dataclass
 class ResidueEncoder:
-    moduli: List[int]
+    moduli: list[int]
     D: int
 
     def __post_init__(self) -> None:
@@ -25,7 +24,7 @@ class ResidueEncoder:
         return encode_residue(x, self.moduli, np.stack(self.bases, axis=0))
 
 
-def encode_residue(x: int, moduli: List[int], bases: np.ndarray) -> Vec:
+def encode_residue(x: int, moduli: list[int], bases: np.ndarray) -> Vec:
     """Encode integer x under multiple moduli using FPE-style roots of unity."""
     if bases.shape[0] != len(moduli):
         raise ValueError("bases must have shape (len(moduli), D)")
@@ -50,7 +49,7 @@ def res_mul(a: np.ndarray, b: np.ndarray) -> Vec:
     return bind(a, b, op="hadamard")
 
 
-def crt_reconstruct(parts: np.ndarray, moduli: List[int]) -> int:
+def crt_reconstruct(parts: np.ndarray, moduli: list[int]) -> int:
     """Chinese Remainder Theorem reconstruction for pairwise coprime moduli.
 
     Args:
@@ -61,9 +60,9 @@ def crt_reconstruct(parts: np.ndarray, moduli: List[int]) -> int:
     """
     # Accept Python ints or small numpy ints
     residues = [int(parts[i]) % int(moduli[i]) for i in range(len(moduli))]
-    Ms = 1
+    ms = 1
     for m in moduli:
-        Ms *= int(m)
+        ms *= int(m)
 
     def inv(a: int, m: int) -> int:
         # Modular inverse via extended Euclid
@@ -80,8 +79,8 @@ def crt_reconstruct(parts: np.ndarray, moduli: List[int]) -> int:
         return t
 
     x = 0
-    for (ai, mi) in zip(residues, moduli):
-        Mi = Ms // mi
-        yi = inv(Mi, mi)
-        x += ai * Mi * yi
-    return int(x % Ms)
+    for (ai, mi) in zip(residues, moduli, strict=False):
+        mi_big = ms // mi
+        yi = inv(mi_big, mi)
+        x += ai * mi_big * yi
+    return int(x % ms)

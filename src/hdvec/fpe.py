@@ -12,11 +12,11 @@ import numpy as np
 from .utils import phase_normalize
 
 
-def generate_base(D: int, dist: Literal["uniform", "cauchy"] = "uniform", unitary: bool = True, rng: Optional[np.random.Generator] = None) -> np.ndarray:
+def generate_base(d: int, dist: Literal["uniform", "cauchy"] = "uniform", unitary: bool = True, rng: np.random.Generator | None = None) -> np.ndarray:
     """Generate a complex unit-modulus base vector of length D.
 
     Args:
-        D: Dimensionality.
+        d: Dimensionality.
         dist: Phase distribution ("uniform" or "cauchy").
         unitary: If True, enforce unit modulus.
         rng: Optional RNG.
@@ -24,9 +24,9 @@ def generate_base(D: int, dist: Literal["uniform", "cauchy"] = "uniform", unitar
     if rng is None:
         rng = np.random.default_rng()
     if dist == "uniform":
-        phases = rng.uniform(-np.pi, np.pi, size=D)
+        phases = rng.uniform(-np.pi, np.pi, size=d)
     elif dist == "cauchy":
-        phases = np.arctan(rng.standard_cauchy(size=D))  # squashed tails
+        phases = np.arctan(rng.standard_cauchy(size=d))  # squashed tails
     else:
         raise ValueError(f"Unknown dist: {dist}")
     base = np.exp(1j * phases).astype(np.complex64)

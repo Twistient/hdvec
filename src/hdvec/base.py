@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Literal
 
 import numpy as np
+
 from .utils import phase_normalize
 
 
@@ -29,12 +30,12 @@ class BaseVector(ABC):
         raise NotImplementedError
 
     @property
-    def D(self) -> int:
+    def dim(self) -> int:
         """Dimensionality inferred from the last axis of ``data``."""
         return int(self.data.shape[-1])
 
     @abstractmethod
-    def normalize(self) -> "BaseVector":  # pragma: no cover - interface only
+    def normalize(self) -> BaseVector:  # pragma: no cover - interface only
         """Return a normalized view/object respecting unit-modulus constraints."""
         raise NotImplementedError
 
@@ -57,7 +58,7 @@ class Vec(BaseVector):
     def data(self) -> np.ndarray:
         return self._data
 
-    def normalize(self) -> "Vec":
+    def normalize(self) -> Vec:
         if np.iscomplexobj(self._data):
             self._data = phase_normalize(self._data)
         return self

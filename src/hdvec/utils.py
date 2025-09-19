@@ -5,7 +5,8 @@ Numba is available, or acts as a no-op otherwise.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable
+from typing import Any
 
 import numpy as np
 
@@ -31,7 +32,7 @@ def optional_njit(*njit_args: Any, **njit_kwargs: Any) -> Callable[[Callable[...
     return decorator
 
 
-def ensure_array(x: Union[np.ndarray, Any]) -> np.ndarray:
+def ensure_array(x: np.ndarray | Any) -> np.ndarray:
     """Return a NumPy ndarray from an input that may be a BaseVector-like object.
 
     If ``x`` is already a NumPy array, return it. Otherwise, if ``x`` has a
@@ -64,7 +65,7 @@ def hermitian_enforce(a: np.ndarray) -> np.ndarray:
     return a
 
 
-def inject_noise(v: np.ndarray, sigma: float, dist: str = "vonmises", rng: Optional[np.random.Generator] = None) -> np.ndarray:
+def inject_noise(v: np.ndarray, sigma: float, dist: str = "vonmises", rng: np.random.Generator | None = None) -> np.ndarray:
     """Inject angular noise into a complex phasor vector.
 
     Args:

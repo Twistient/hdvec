@@ -4,13 +4,12 @@ Minimal NumPy implementations with optional Numba JIT.
 """
 from __future__ import annotations
 
-from typing import Literal, Union
+from typing import Union
 
 import numpy as np
 
 from .base import BaseVector, Vec
-from .utils import phase_normalize, hermitian_enforce, optional_njit, ensure_array
-from .config import Config
+from .utils import ensure_array, optional_njit, phase_normalize
 
 
 @optional_njit(cache=True)
@@ -22,7 +21,7 @@ def _similarity_numba(a: np.ndarray, b: np.ndarray) -> float:  # type: ignore[no
     return float(val)
 
 
-def bind(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector], op: str = "hadamard") -> np.ndarray:
+def bind(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector, op: str = "hadamard") -> Vec:
     """Vector binding operation, configurable per VSA type.
 
     Supports:
@@ -49,7 +48,7 @@ def bind(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector], op:
     raise ValueError(f"Unknown binding op: {op}")
 
 
-def bundle(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector]) -> Vec:
+def bundle(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
     """Superposition (bundling) of two vectors with renormalization for phasors.
 
     Note: Accepts BaseVector inputs, returns a NumPy array (transitional API).
@@ -61,7 +60,7 @@ def bundle(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector]) -
     return Vec(out)
 
 
-def similarity(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector]) -> float:
+def similarity(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> float:
     """Real part of normalized inner product ⟨a,b⟩/D.
 
     Returns a scalar in approximately [-1, 1] for unit-normalized phasors.
@@ -74,7 +73,7 @@ def similarity(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector
     return _similarity_numba(a_arr, b_arr)
 
 
-def permute(v: Union[np.ndarray, BaseVector], shift: int) -> Vec:
+def permute(v: np.ndarray | BaseVector, shift: int) -> Vec:
     """Permutation as circular shift (roll) along the last axis.
 
     Note: Accepts BaseVector input, returns NumPy array.

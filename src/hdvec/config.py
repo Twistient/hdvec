@@ -7,7 +7,7 @@ implementations mature.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 
@@ -33,7 +33,7 @@ class Config:
     binding: Literal["hadamard", "cc", "lcc"] = "hadamard"
     dist: Literal["uniform", "cauchy"] = "uniform"
     m: int = 1
-    moduli: Optional[list[int]] = None
+    moduli: list[int] | None = None
     conv_backend: Literal["fft"] = "fft"
 
 

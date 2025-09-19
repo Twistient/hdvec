@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import numpy as np
 
 
@@ -18,7 +19,7 @@ class GHVec:
     data: np.ndarray
 
     @property
-    def D(self) -> int:
+    def dim(self) -> int:
         return int(self.data.shape[0])
 
     @property
@@ -26,19 +27,19 @@ class GHVec:
         return int(self.data.shape[1])
 
 
-def _unitary_qr(M: np.ndarray) -> np.ndarray:
-    Q, _ = np.linalg.qr(M)
-    return Q.astype(axtype)
+def _unitary_qr(mat: np.ndarray) -> np.ndarray:
+    q, _ = np.linalg.qr(mat)
+    return q.astype(axtype)
 
 
-def sample_ghrr(D: int, m: int, policy: str = "haar", rng: np.random.Generator | None = None) -> GHVec:
+def sample_ghrr(d: int, m: int, policy: str = "haar", rng: np.random.Generator | None = None) -> GHVec:
     """Sample a GHVec with approximate Haar unitary slices per dimension."""
     if rng is None:
         rng = np.random.default_rng()
-    mats = np.empty((D, m, m), dtype=axtype)
-    for j in range(D):
-        M = rng.standard_normal((m, m)) + 1j * rng.standard_normal((m, m))
-        mats[j] = _unitary_qr(M)
+    mats = np.empty((d, m, m), dtype=axtype)
+    for j in range(d):
+        mat = rng.standard_normal((m, m)) + 1j * rng.standard_normal((m, m))
+        mats[j] = _unitary_qr(mat)
     return GHVec(mats)
 
 
@@ -46,9 +47,9 @@ def gh_bind(a: GHVec, b: GHVec) -> GHVec:
     """GHRR binding: per-dimension matrix multiplication (non-commutative)."""
     if a.data.shape != b.data.shape:
         raise ValueError("Shape mismatch")
-    D, m, _ = a.data.shape
+    d, m, _ = a.data.shape
     out = np.empty_like(a.data)
-    for j in range(D):
+    for j in range(d):
         out[j] = a.data[j] @ b.data[j]
     return GHVec(out)
 
@@ -57,17 +58,17 @@ def gh_bundle(a: GHVec, b: GHVec) -> GHVec:
     """Bundle by simple average; re-orthonormalize via QR."""
     if a.data.shape != b.data.shape:
         raise ValueError("Shape mismatch")
-    D, m, _ = a.data.shape
+    d, m, _ = a.data.shape
     out = np.empty_like(a.data)
-    for j in range(D):
+    for j in range(d):
         out[j] = _unitary_qr((a.data[j] + b.data[j]) / 2)
     return GHVec(out)
 
 
 def gh_similarity(a: GHVec, b: GHVec) -> float:
     """Similarity: (1/(mD)) * Re tr( sum_j a_j b_j^H )."""
-    D, m, _ = a.data.shape
+    d, m, _ = a.data.shape
     s = 0.0
-    for j in range(D):
+    for j in range(d):
         s += np.trace(a.data[j] @ b.data[j].conj().T).real
-    return float(s / (m * D))
+    return float(s / (m * d))

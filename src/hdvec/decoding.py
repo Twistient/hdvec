@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import numpy as np
 
 from .core import similarity
-from .fpe import encode_fpe
 
 
 @dataclass

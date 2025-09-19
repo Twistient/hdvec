@@ -16,14 +16,20 @@ try:
 except PackageNotFoundError:  # pragma: no cover - local editable import
     __version__ = "0.0.0"
 
-from .config import Config, get_config
 from .base import BaseVector
-from .core import bind, bundle, similarity, permute
-from .fpe import FPEEncoder, generate_base, encode_fpe
+from .config import Config, get_config
+from .core import bind, bundle, permute, similarity
+from .decoding import AnchorMemory, decode_function, decode_point, resonator_decode
+from .fpe import FPEEncoder, encode_fpe, generate_base
+from .ghrr import GHVec, gh_bind, gh_bundle, gh_similarity, sample_ghrr
+from .residue import (
+    ResidueEncoder,
+    crt_reconstruct,
+    encode_residue,
+    res_add,
+    res_mul,
+)
 from .vfa import VFAEncoder
-from .ghrr import GHVec, sample_ghrr, gh_bind, gh_bundle, gh_similarity
-from .residue import ResidueEncoder, encode_residue, res_add, res_mul, crt_reconstruct
-from .decoding import AnchorMemory, decode_point, decode_function, resonator_decode
 
 __all__ = [
     "__version__",
