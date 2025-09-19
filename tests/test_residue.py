@@ -17,6 +17,4 @@ def test_res_add_unit_modulus():
     a = np.exp(1j * rng.uniform(-np.pi, np.pi, size=D)).astype(np.complex64)
     b = np.exp(1j * rng.uniform(-np.pi, np.pi, size=D)).astype(np.complex64)
     c = res_add(a, b)
-    import numpy as np
-
     assert np.allclose(np.abs(c), 1.0, atol=1e-6)

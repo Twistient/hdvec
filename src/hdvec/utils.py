@@ -34,10 +34,12 @@ def optional_njit(*njit_args: Any, **njit_kwargs: Any) -> Callable[[Callable[...
 def ensure_array(x: Union[np.ndarray, Any]) -> np.ndarray:
     """Return a NumPy ndarray from an input that may be a BaseVector-like object.
 
-    If ``x`` has a ``.data`` attribute, it will be used; otherwise ``x`` is
-    returned as-is. This enables transitional acceptance of BaseVector without
-    changing return types yet.
+    If ``x`` is already a NumPy array, return it. Otherwise, if ``x`` has a
+    ``.data`` attribute (e.g., a BaseVector), return that. This avoids using
+    ``ndarray.data`` which is a buffer interface, not the array itself.
     """
+    if isinstance(x, np.ndarray):
+        return x
     data = getattr(x, "data", x)
     return data
 
