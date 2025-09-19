@@ -4,8 +4,6 @@ Minimal NumPy implementations with optional Numba JIT.
 """
 from __future__ import annotations
 
-from typing import Union
-
 import numpy as np
 
 from .base import BaseVector, Vec

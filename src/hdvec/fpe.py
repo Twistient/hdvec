@@ -53,7 +53,7 @@ class FPEEncoder:
     D: int
     dist: Literal["uniform", "cauchy"] = "uniform"
     unitary: bool = True
-    rng: Optional[np.random.Generator] = None
+    rng: np.random.Generator | None = None
 
     def __post_init__(self) -> None:
         self.base = generate_base(self.D, dist=self.dist, unitary=self.unitary, rng=self.rng)

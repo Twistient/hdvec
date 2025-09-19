@@ -5,12 +5,13 @@ Minimal encoders using FPE.
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 import numpy as np
 
+from .base import Vec
 from .core import bind, similarity
 from .fpe import encode_fpe
 from .utils import ensure_array
-from .base import Vec
 
 
 def encode_function(points: np.ndarray, alphas: np.ndarray, base: np.ndarray) -> Vec:
