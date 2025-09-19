@@ -33,3 +33,4 @@ htmlcov/
 
 # Sphinx
 docs/_build/
+WARP.md
