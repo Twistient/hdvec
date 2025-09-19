@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Literal
 
 import numpy as np
+from .utils import phase_normalize
 
 
 class BaseVector(ABC):
@@ -36,3 +37,30 @@ class BaseVector(ABC):
     def normalize(self) -> "BaseVector":  # pragma: no cover - interface only
         """Return a normalized view/object respecting unit-modulus constraints."""
         raise NotImplementedError
+
+
+class Vec(BaseVector):
+    """Concrete 1-D vector wrapper used for tests/examples.
+
+    Stores a NumPy ndarray and normalizes to unit-modulus if complex.
+    """
+
+    __slots__ = ("_data",)
+
+    def __init__(self, data: np.ndarray):
+        if not isinstance(data, np.ndarray):
+            raise TypeError("data must be a numpy ndarray")
+        # Keep dtype; normalize below will cast complex to complex64
+        self._data = data
+
+    @property
+    def data(self) -> np.ndarray:
+        return self._data
+
+    def normalize(self) -> "Vec":
+        if np.iscomplexobj(self._data):
+            self._data = phase_normalize(self._data)
+        return self
+
+    def __array__(self) -> np.ndarray:
+        return self._data
