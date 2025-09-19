@@ -12,3 +12,9 @@ API
 .. automodule:: hdvec
    :members:
    :undoc-members:
+
+.. automodule:: hdvec.config
+   :members:
+
+.. automodule:: hdvec.base
+   :members:
