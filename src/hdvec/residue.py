@@ -9,6 +9,7 @@ import numpy as np
 from .fpe import generate_base, encode_fpe
 from .core import bind
 from .utils import phase_normalize
+from .base import Vec
 
 
 @dataclass
@@ -24,7 +25,7 @@ class ResidueEncoder:
         return encode_residue(x, self.moduli, np.stack(self.bases, axis=0))
 
 
-def encode_residue(x: int, moduli: List[int], bases: np.ndarray) -> np.ndarray:
+def encode_residue(x: int, moduli: List[int], bases: np.ndarray) -> Vec:
     """Encode integer x under multiple moduli using FPE-style roots of unity."""
     if bases.shape[0] != len(moduli):
         raise ValueError("bases must have shape (len(moduli), D)")
@@ -36,15 +37,15 @@ def encode_residue(x: int, moduli: List[int], bases: np.ndarray) -> np.ndarray:
         parts.append(z_m)
     # Bundle across moduli
     v = np.sum(parts, axis=0).astype(np.complex64)
-    return phase_normalize(v)
+    return Vec(phase_normalize(v))
 
 
-def res_add(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+def res_add(a: np.ndarray, b: np.ndarray) -> Vec:
     """RHC add: phase-add via componentwise multiplication then renormalize."""
-    return phase_normalize(a * b)
+    return Vec(phase_normalize(a * b))
 
 
-def res_mul(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+def res_mul(a: np.ndarray, b: np.ndarray) -> Vec:
     """RHC multiply: placeholder using hadamard bind (⋆)."""
     return bind(a, b, op="hadamard")
 

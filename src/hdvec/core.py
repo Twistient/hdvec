@@ -8,7 +8,7 @@ from typing import Literal, Union
 
 import numpy as np
 
-from .base import BaseVector
+from .base import BaseVector, Vec
 from .utils import phase_normalize, hermitian_enforce, optional_njit, ensure_array
 from .config import Config
 
@@ -36,18 +36,20 @@ def bind(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector], op:
     b_arr = ensure_array(b)
     if op == "hadamard":
         out = a_arr * b_arr
-        return phase_normalize(out) if np.iscomplexobj(out) else out
+        out = phase_normalize(out) if np.iscomplexobj(out) else out
+        return Vec(out)
     if op == "cc":
         fa = np.fft.fft(a_arr)
         fb = np.fft.fft(b_arr)
         out = np.fft.ifft(fa * fb)
-        return out.astype(np.complex64) if np.iscomplexobj(a_arr) or np.iscomplexobj(b_arr) else out.real
+        out = out.astype(np.complex64) if np.iscomplexobj(a_arr) or np.iscomplexobj(b_arr) else out.real
+        return Vec(out)
     if op == "lcc":
         raise NotImplementedError("Localized circular convolution (lcc) is not implemented in stubs.")
     raise ValueError(f"Unknown binding op: {op}")
 
 
-def bundle(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector]) -> np.ndarray:
+def bundle(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector]) -> Vec:
     """Superposition (bundling) of two vectors with renormalization for phasors.
 
     Note: Accepts BaseVector inputs, returns a NumPy array (transitional API).
@@ -55,7 +57,8 @@ def bundle(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector]) -
     a_arr = ensure_array(a)
     b_arr = ensure_array(b)
     out = a_arr + b_arr
-    return phase_normalize(out) if np.iscomplexobj(out) else out / 2.0
+    out = phase_normalize(out) if np.iscomplexobj(out) else out / 2.0
+    return Vec(out)
 
 
 def similarity(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector]) -> float:
@@ -71,10 +74,10 @@ def similarity(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector
     return _similarity_numba(a_arr, b_arr)
 
 
-def permute(v: Union[np.ndarray, BaseVector], shift: int) -> np.ndarray:
+def permute(v: Union[np.ndarray, BaseVector], shift: int) -> Vec:
     """Permutation as circular shift (roll) along the last axis.
 
     Note: Accepts BaseVector input, returns NumPy array.
     """
     v_arr = ensure_array(v)
-    return np.roll(v_arr, shift, axis=-1)
+    return Vec(np.roll(v_arr, shift, axis=-1))

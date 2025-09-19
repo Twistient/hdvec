@@ -10,9 +10,10 @@ import numpy as np
 from .core import bind, similarity
 from .fpe import encode_fpe
 from .utils import ensure_array
+from .base import Vec
 
 
-def encode_function(points: np.ndarray, alphas: np.ndarray, base: np.ndarray) -> np.ndarray:
+def encode_function(points: np.ndarray, alphas: np.ndarray, base: np.ndarray) -> Vec:
     """VFA function rep: y_f = sum_k alpha_k z(r_k).
 
     Args:
@@ -25,7 +26,7 @@ def encode_function(points: np.ndarray, alphas: np.ndarray, base: np.ndarray) ->
     if points.shape != alphas.shape:
         raise ValueError("points and alphas must have same shape")
     zs = [alphas[k] * encode_fpe(float(points[k]), base) for k in range(points.size)]
-    return np.sum(zs, axis=0).astype(np.complex64)
+    return Vec(np.sum(zs, axis=0).astype(np.complex64))
 
 
 def readout(y_f: np.ndarray, s: float, base: np.ndarray) -> float:
@@ -34,19 +35,19 @@ def readout(y_f: np.ndarray, s: float, base: np.ndarray) -> float:
     return similarity(y_f, z_s)
 
 
-def shift(y_f: np.ndarray, t: float, base: np.ndarray) -> np.ndarray:
+def shift(y_f: np.ndarray, t: float, base: np.ndarray) -> Vec:
     """Shift: y_f ∘ z(t) via hadamard bind."""
     z_t = encode_fpe(t, base)
     return bind(y_f, z_t, op="hadamard")
 
 
-def convolve(y_f: np.ndarray, y_g: np.ndarray) -> np.ndarray:
+def convolve(y_f: np.ndarray, y_g: np.ndarray) -> Vec:
     """Circular convolution of two representations (placeholder via FFT)."""
     a = ensure_array(y_f)
     b = ensure_array(y_g)
     fa = np.fft.fft(a)
     fb = np.fft.fft(b)
-    return np.fft.ifft(fa * fb).astype(np.complex64)
+    return Vec(np.fft.ifft(fa * fb).astype(np.complex64))
 
 
 @dataclass

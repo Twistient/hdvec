@@ -29,5 +29,5 @@ def test_permute_rolls():
 def test_bundle_shapes():
     a = np.ones(8)
     b = np.ones(8)
-    out = bundle(a, b)
-    assert out.shape == a.shape
+out = bundle(a, b)
+    assert np.asarray(out).shape == a.shape
