@@ -9,6 +9,7 @@ import numpy as np
 
 from .core import bind, similarity
 from .fpe import encode_fpe
+from .utils import ensure_array
 
 
 def encode_function(points: np.ndarray, alphas: np.ndarray, base: np.ndarray) -> np.ndarray:
@@ -41,8 +42,10 @@ def shift(y_f: np.ndarray, t: float, base: np.ndarray) -> np.ndarray:
 
 def convolve(y_f: np.ndarray, y_g: np.ndarray) -> np.ndarray:
     """Circular convolution of two representations (placeholder via FFT)."""
-    fa = np.fft.fft(y_f)
-    fb = np.fft.fft(y_g)
+    a = ensure_array(y_f)
+    b = ensure_array(y_g)
+    fa = np.fft.fft(a)
+    fb = np.fft.fft(b)
     return np.fft.ifft(fa * fb).astype(np.complex64)
 
 

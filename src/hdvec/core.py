@@ -4,11 +4,12 @@ Minimal NumPy implementations with optional Numba JIT.
 """
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Union
 
 import numpy as np
 
-from .utils import phase_normalize, hermitian_enforce, optional_njit
+from .base import BaseVector
+from .utils import phase_normalize, hermitian_enforce, optional_njit, ensure_array
 from .config import Config
 
 
@@ -21,42 +22,59 @@ def _similarity_numba(a: np.ndarray, b: np.ndarray) -> float:  # type: ignore[no
     return float(val)
 
 
-def bind(a: np.ndarray, b: np.ndarray, op: str = "hadamard") -> np.ndarray:
+def bind(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector], op: str = "hadamard") -> np.ndarray:
     """Vector binding operation, configurable per VSA type.
 
     Supports:
       - hadamard: componentwise multiplication (phasor add)
       - cc: circular convolution via FFT
       - lcc: placeholder (raises NotImplementedError)
+
+    Note: This transitional signature accepts BaseVector but returns a NumPy array.
     """
+    a_arr = ensure_array(a)
+    b_arr = ensure_array(b)
     if op == "hadamard":
-        out = a * b
+        out = a_arr * b_arr
         return phase_normalize(out) if np.iscomplexobj(out) else out
     if op == "cc":
-        fa = np.fft.fft(a)
-        fb = np.fft.fft(b)
+        fa = np.fft.fft(a_arr)
+        fb = np.fft.fft(b_arr)
         out = np.fft.ifft(fa * fb)
-        return out.astype(np.complex64) if np.iscomplexobj(a) or np.iscomplexobj(b) else out.real
+        return out.astype(np.complex64) if np.iscomplexobj(a_arr) or np.iscomplexobj(b_arr) else out.real
     if op == "lcc":
         raise NotImplementedError("Localized circular convolution (lcc) is not implemented in stubs.")
     raise ValueError(f"Unknown binding op: {op}")
 
 
-def bundle(a: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """Superposition (bundling) of two vectors with renormalization for phasors."""
-    out = a + b
+def bundle(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector]) -> np.ndarray:
+    """Superposition (bundling) of two vectors with renormalization for phasors.
+
+    Note: Accepts BaseVector inputs, returns a NumPy array (transitional API).
+    """
+    a_arr = ensure_array(a)
+    b_arr = ensure_array(b)
+    out = a_arr + b_arr
     return phase_normalize(out) if np.iscomplexobj(out) else out / 2.0
 
 
-def similarity(a: np.ndarray, b: np.ndarray) -> float:
+def similarity(a: Union[np.ndarray, BaseVector], b: Union[np.ndarray, BaseVector]) -> float:
     """Real part of normalized inner product ⟨a,b⟩/D.
 
     Returns a scalar in approximately [-1, 1] for unit-normalized phasors.
+
+    Note: Accepts BaseVector inputs (transitional API).
     """
+    a_arr = ensure_array(a).astype(np.complex64)
+    b_arr = ensure_array(b).astype(np.complex64)
     # Use JIT when available
-    return _similarity_numba(a.astype(np.complex64), b.astype(np.complex64))
+    return _similarity_numba(a_arr, b_arr)
 
 
-def permute(v: np.ndarray, shift: int) -> np.ndarray:
-    """Permutation as circular shift (roll) along the last axis."""
-    return np.roll(v, shift, axis=-1)
+def permute(v: Union[np.ndarray, BaseVector], shift: int) -> np.ndarray:
+    """Permutation as circular shift (roll) along the last axis.
+
+    Note: Accepts BaseVector input, returns NumPy array.
+    """
+    v_arr = ensure_array(v)
+    return np.roll(v_arr, shift, axis=-1)

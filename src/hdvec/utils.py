@@ -5,7 +5,7 @@ Numba is available, or acts as a no-op otherwise.
 """
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 
@@ -29,6 +29,17 @@ def optional_njit(*njit_args: Any, **njit_kwargs: Any) -> Callable[[Callable[...
         return _numba_njit(*njit_args, **njit_kwargs)(func)  # type: ignore[misc]
 
     return decorator
+
+
+def ensure_array(x: Union[np.ndarray, Any]) -> np.ndarray:
+    """Return a NumPy ndarray from an input that may be a BaseVector-like object.
+
+    If ``x`` has a ``.data`` attribute, it will be used; otherwise ``x`` is
+    returned as-is. This enables transitional acceptance of BaseVector without
+    changing return types yet.
+    """
+    data = getattr(x, "data", x)
+    return data
 
 
 def phase_normalize(v: np.ndarray) -> np.ndarray:
