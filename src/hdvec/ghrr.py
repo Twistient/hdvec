@@ -1,4 +1,5 @@
 """Generalized Holographic Reduced Representations (GHRR) stubs."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -15,6 +16,7 @@ class GHVec:
     Attributes:
         data: Array of shape (D, m, m), complex64.
     """
+
     data: np.ndarray
 
     @property
@@ -31,7 +33,9 @@ def _unitary_qr(mat: np.ndarray) -> np.ndarray:
     return q.astype(axtype)
 
 
-def sample_ghrr(d: int, m: int, policy: str = "haar", rng: np.random.Generator | None = None) -> GHVec:
+def sample_ghrr(
+    d: int, m: int, policy: str = "haar", rng: np.random.Generator | None = None
+) -> GHVec:
     """Sample a GHVec with approximate Haar unitary slices per dimension."""
     if rng is None:
         rng = np.random.default_rng()

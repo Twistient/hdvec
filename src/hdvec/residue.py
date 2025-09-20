@@ -1,14 +1,15 @@
 """Residue Holographic Computing (RHC) stubs."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 
 import numpy as np
 
-from .base import Vec
+from .base import BaseVector, Vec
 from .core import bind
 from .fpe import encode_fpe, generate_base
-from .utils import phase_normalize
+from .utils import ensure_array, phase_normalize
 
 
 @dataclass
@@ -20,7 +21,7 @@ class ResidueEncoder:
         # One base per modulus
         self.bases = [generate_base(self.D) for _ in self.moduli]
 
-    def __call__(self, x: int) -> np.ndarray:
+    def __call__(self, x: int) -> Vec:
         return encode_residue(x, self.moduli, np.stack(self.bases, axis=0))
 
 
@@ -39,12 +40,15 @@ def encode_residue(x: int, moduli: list[int], bases: np.ndarray) -> Vec:
     return Vec(phase_normalize(v))
 
 
-def res_add(a: np.ndarray, b: np.ndarray) -> Vec:
+def res_add(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
     """RHC add: phase-add via componentwise multiplication then renormalize."""
-    return Vec(phase_normalize(a * b))
+    a_arr = ensure_array(a)
+    b_arr = ensure_array(b)
+    result = phase_normalize(a_arr * b_arr)
+    return Vec(result)
 
 
-def res_mul(a: np.ndarray, b: np.ndarray) -> Vec:
+def res_mul(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
     """RHC multiply: placeholder using hadamard bind (⋆)."""
     return bind(a, b, op="hadamard")
 
@@ -79,7 +83,7 @@ def crt_reconstruct(parts: np.ndarray, moduli: list[int]) -> int:
         return t
 
     x = 0
-    for (ai, mi) in zip(residues, moduli, strict=False):
+    for ai, mi in zip(residues, moduli, strict=False):
         mi_big = ms // mi
         yi = inv(mi_big, mi)
         x += ai * mi_big * yi

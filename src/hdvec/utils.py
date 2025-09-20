@@ -3,20 +3,33 @@
 This module also exposes an `optional_njit` decorator that applies Numba's njit when
 Numba is available, or acts as a no-op otherwise.
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, ParamSpec, Protocol, TypeVar, cast
 
 import numpy as np
 
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+class _NumbaFactory(Protocol):
+    def __call__(self, *args: Any, **kwargs: Any) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
+
+
 try:  # Optional JIT
-    from numba import njit as _numba_njit  # type: ignore
+    from numba import njit as _imported_njit
 except Exception:  # pragma: no cover - fallback when numba is missing
-    _numba_njit = None  # type: ignore
+    _numba_njit: _NumbaFactory | None = None
+else:
+    _numba_njit = cast(_NumbaFactory, _imported_njit)
 
 
-def optional_njit(*njit_args: Any, **njit_kwargs: Any) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def optional_njit(
+    *njit_args: Any, **njit_kwargs: Any
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Return a decorator that applies numba.njit if available, else a no-op.
 
     Examples:
@@ -24,10 +37,12 @@ def optional_njit(*njit_args: Any, **njit_kwargs: Any) -> Callable[[Callable[...
         def f(x):
             return x + 1
     """
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         if _numba_njit is None:
             return func
-        return _numba_njit(*njit_args, **njit_kwargs)(func)  # type: ignore[misc]
+        decorated = _numba_njit(*njit_args, **njit_kwargs)(func)
+        return decorated
 
     return decorator
 
@@ -42,7 +57,7 @@ def ensure_array(x: np.ndarray | Any) -> np.ndarray:
     if isinstance(x, np.ndarray):
         return x
     data = getattr(x, "data", x)
-    return data
+    return np.asarray(data)
 
 
 def phase_normalize(v: np.ndarray) -> np.ndarray:
@@ -65,7 +80,9 @@ def hermitian_enforce(a: np.ndarray) -> np.ndarray:
     return a
 
 
-def inject_noise(v: np.ndarray, sigma: float, dist: str = "vonmises", rng: np.random.Generator | None = None) -> np.ndarray:
+def inject_noise(
+    v: np.ndarray, sigma: float, dist: str = "vonmises", rng: np.random.Generator | None = None
+) -> np.ndarray:
     """Inject angular noise into a complex phasor vector.
 
     Args:
@@ -84,4 +101,5 @@ def inject_noise(v: np.ndarray, sigma: float, dist: str = "vonmises", rng: np.ra
         noise = rng.vonmises(mu=0.0, kappa=1.0 / (sigma + 1e-12), size=v.shape)
     else:
         noise = rng.normal(loc=0.0, scale=sigma, size=v.shape)
-    return np.exp(1j * (np.angle(v) + noise)).astype(np.complex64)
+    result = np.exp(1j * (np.angle(v) + noise)).astype(np.complex64)
+    return cast(np.ndarray, result)

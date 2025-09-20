@@ -1,8 +1,9 @@
 import numpy as np
 
-from hdvec.fpe import FPEEncoder, generate_base, encode_fpe
-from hdvec.vfa import VFAEncoder, encode_function, readout
 from hdvec.core import bind
+from hdvec.fpe import FPEEncoder, encode_fpe, generate_base
+from hdvec.utils import ensure_array
+from hdvec.vfa import VFAEncoder, encode_function, readout
 
 
 def main() -> None:
@@ -21,7 +22,9 @@ def main() -> None:
     # Shift by t=0.1 using bind with z(t)
     z_t = encode_fpe(0.1, base)
     y_shift = bind(y_f, z_t)
-    print("shifted sim delta:", (y_shift.conj() * y_f).sum().real / D)
+    y_shift_arr = ensure_array(y_shift)
+    y_f_arr = ensure_array(y_f)
+    print("shifted sim delta:", (y_shift_arr.conj() * y_f_arr).sum().real / D)
 
 
 if __name__ == "__main__":

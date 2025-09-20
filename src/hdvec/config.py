@@ -4,10 +4,11 @@ This module centralizes runtime-configurable options and provides a lightweight
 singleton-style accessor. The surface is intentionally small and can expand as
 implementations mature.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 
@@ -29,7 +30,7 @@ class Config:
 
     D: int = 1024
     backend: Literal["numpy", "torch"] = "numpy"
-    dtype: np.dtype = np.complex64
+    dtype: np.dtype[np.complexfloating[Any, Any]] = np.dtype(np.complex64)
     binding: Literal["hadamard", "cc", "lcc"] = "hadamard"
     dist: Literal["uniform", "cauchy"] = "uniform"
     m: int = 1

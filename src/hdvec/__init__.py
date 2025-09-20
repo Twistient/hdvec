@@ -2,14 +2,17 @@
 
 Minimal, NumPy-first stubs for hyperdimensional vector ops and encoders.
 """
+
 from __future__ import annotations
 
 try:
     from importlib.metadata import PackageNotFoundError, version
 except Exception:  # pragma: no cover - very old Pythons
     PackageNotFoundError = Exception  # type: ignore
+
     def version(_: str) -> str:  # type: ignore
         return "0.0.0"
+
 
 try:
     __version__ = version("hdvec")

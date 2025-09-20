@@ -7,5 +7,5 @@ def test_config_singleton_and_fields():
     assert cfg1 is cfg2
     assert isinstance(cfg1.D, int) and cfg1.D > 0
     # Toggle binding and ensure attribute present
-    cfg1.binding = 'cc'
-    assert get_config().binding == 'cc'
+    cfg1.binding = "cc"
+    assert get_config().binding == "cc"

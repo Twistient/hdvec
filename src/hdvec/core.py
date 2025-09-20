@@ -2,6 +2,7 @@
 
 Minimal NumPy implementations with optional Numba JIT.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -11,7 +12,7 @@ from .utils import ensure_array, optional_njit, phase_normalize
 
 
 @optional_njit(cache=True)
-def _similarity_numba(a: np.ndarray, b: np.ndarray) -> float:  # type: ignore[no-redef]
+def _similarity_numba(a: np.ndarray, b: np.ndarray) -> float:
     # Real part of normalized inner product
     denom = max(1, a.size)
     # Note: Numba supports complex operations; cast to float for return
@@ -39,10 +40,16 @@ def bind(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector, op: str = "hada
         fa = np.fft.fft(a_arr)
         fb = np.fft.fft(b_arr)
         out = np.fft.ifft(fa * fb)
-        out = out.astype(np.complex64) if np.iscomplexobj(a_arr) or np.iscomplexobj(b_arr) else out.real
+        out = (
+            out.astype(np.complex64)
+            if np.iscomplexobj(a_arr) or np.iscomplexobj(b_arr)
+            else out.real
+        )
         return Vec(out)
     if op == "lcc":
-        raise NotImplementedError("Localized circular convolution (lcc) is not implemented in stubs.")
+        raise NotImplementedError(
+            "Localized circular convolution (lcc) is not implemented in stubs."
+        )
     raise ValueError(f"Unknown binding op: {op}")
 
 

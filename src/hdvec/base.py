@@ -4,6 +4,7 @@ This provides a minimal ABC to enable future backend-agnostic vector objects
 (e.g., NumPy arrays today, Torch tensors later) while allowing a transitional
 phase where functions continue accepting/returning NumPy arrays.
 """
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

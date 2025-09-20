@@ -2,6 +2,7 @@
 
 Minimal stubs: unit-modulus bases and componentwise exponentiation.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,7 +13,12 @@ import numpy as np
 from .utils import phase_normalize
 
 
-def generate_base(d: int, dist: Literal["uniform", "cauchy"] = "uniform", unitary: bool = True, rng: np.random.Generator | None = None) -> np.ndarray:
+def generate_base(
+    d: int,
+    dist: Literal["uniform", "cauchy"] = "uniform",
+    unitary: bool = True,
+    rng: np.random.Generator | None = None,
+) -> np.ndarray:
     """Generate a complex unit-modulus base vector of length D.
 
     Args:
@@ -50,6 +56,7 @@ class FPEEncoder:
         enc = FPEEncoder(D=1024)
         z = enc(1.5)
     """
+
     D: int
     dist: Literal["uniform", "cauchy"] = "uniform"
     unitary: bool = True
