@@ -1,6 +1,9 @@
-"""Core VSA primitives (superposition, binding, similarity, permutation) and config.
+"""Core VSA primitives (superposition, binding, similarity, permutation).
 
-Minimal NumPy implementations with optional Numba JIT.
+Minimal NumPy implementations with optional Numba JIT. This module provides the
+canonical operations of the complex phasor VSA/HRR/FHRR algebra used throughout
+the library. All functions accept either ``np.ndarray`` or a ``BaseVector`` and
+return a ``Vec`` (wrapper around a NumPy array) where appropriate.
 """
 
 from __future__ import annotations
@@ -53,6 +56,26 @@ def bind(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector, op: str = "hada
     raise ValueError(f"Unknown binding op: {op}")
 
 
+def inv(a: np.ndarray | BaseVector) -> Vec:
+    """Elementwise inverse for phasor vectors.
+
+    For complex phasors this is the complex conjugate; for real arrays this is
+    an identity (no-op). Returns a Vec wrapper.
+    """
+    arr = ensure_array(a)
+    if np.iscomplexobj(arr):
+        return Vec(np.conj(arr))
+    return Vec(arr)
+
+
+def unbind(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
+    """Unbind ``a`` with ``b`` via elementwise multiply with ``b``'s inverse.
+
+    For phasors: ``unbind(a, b) = a ⊛ conj(b)``.
+    """
+    return bind(a, inv(b))
+
+
 def bundle(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
     """Superposition (bundling) of two vectors with renormalization for phasors.
 
@@ -78,6 +101,14 @@ def similarity(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> float:
     return _similarity_numba(a_arr, b_arr)
 
 
+def cosine(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> float:
+    """Alias for :func:`similarity`.
+
+    Returns the real part of the normalized inner product.
+    """
+    return similarity(a, b)
+
+
 def permute(v: np.ndarray | BaseVector, shift: int) -> Vec:
     """Permutation as circular shift (roll) along the last axis.
 
@@ -85,3 +116,95 @@ def permute(v: np.ndarray | BaseVector, shift: int) -> Vec:
     """
     v_arr = ensure_array(v)
     return Vec(np.roll(v_arr, shift, axis=-1))
+
+
+def project_unitary(v: np.ndarray | BaseVector) -> Vec:
+    """Project a vector to unit modulus (phase-only) if complex; else L2-normalize.
+
+    This helps arrest drift across long chains of bindings.
+    """
+    arr = ensure_array(v)
+    if np.iscomplexobj(arr):
+        angles = np.angle(arr)
+        return Vec(np.exp(1j * angles).astype(np.complex64))
+    norm = float(np.linalg.norm(arr))
+    return Vec(arr if norm == 0.0 else (arr / norm).astype(arr.dtype))
+
+
+def topk(query: np.ndarray, codebook: np.ndarray, k: int = 5) -> tuple[np.ndarray, np.ndarray]:
+    """Return top-k indices and scores by cosine similarity against ``codebook``.
+
+    Args:
+        query: (D,) array.
+        codebook: (K, D) array of atoms.
+        k: number of neighbors to return.
+    Returns:
+        (indices, scores) arrays of shape (k,).
+    """
+    q = ensure_array(query).astype(np.complex64 if np.iscomplexobj(codebook) else np.float32)
+    cb = ensure_array(codebook)
+    # Normalize
+    denom = float(np.linalg.norm(q))
+    qn = q / max(1e-12, denom)
+    cn = cb / np.maximum(1e-12, np.linalg.norm(cb, axis=1, keepdims=True))
+    sims = (np.conj(cn) * qn).sum(axis=1).real
+    idx = np.argpartition(-sims, kth=min(k, sims.size - 1))[:k]
+    order = np.argsort(-sims[idx])
+    idx = idx[order]
+    return idx, sims[idx]
+
+
+def nearest(query: np.ndarray, codebook: np.ndarray) -> tuple[int, float]:
+    """Return index and cosine score of the nearest atom in the codebook."""
+    idxs, scores = topk(query, codebook, k=1)
+    return int(idxs[0]), float(scores[0])
+
+
+def circ_conv(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
+    """Circular convolution via FFT (HRR form)."""
+    aa = ensure_array(a)
+    bb = ensure_array(b)
+    fa = np.fft.fft(aa)
+    fb = np.fft.fft(bb)
+    out = np.fft.ifft(fa * fb)
+    return Vec(
+        out.astype(np.complex64) if (np.iscomplexobj(aa) or np.iscomplexobj(bb)) else out.real
+    )
+
+
+def circ_corr(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
+    """Circular correlation via FFT (inverse of circular convolution by ``b``).
+
+    If ``c = circ_conv(a, b)``, then approximately ``a ≈ circ_corr(c, b)`` within
+    numerical tolerance.
+    """
+    aa = ensure_array(a)
+    bb = ensure_array(b)
+    fa = np.fft.fft(aa)
+    fb = np.fft.fft(bb)
+    out = np.fft.ifft(fa * np.conj(fb))
+    return Vec(
+        out.astype(np.complex64) if (np.iscomplexobj(aa) or np.iscomplexobj(bb)) else out.real
+    )
+
+
+class Codebook:
+    """Lightweight codebook of atoms with nearest/top-k cleanup utilities."""
+
+    def __init__(self, atoms: np.ndarray, names: list[str] | None = None):
+        if atoms.ndim != 2:
+            raise ValueError("atoms must have shape (K, D)")
+        self.atoms = atoms
+        self.names = names
+
+    def add(self, h: np.ndarray, name: str | None = None) -> None:
+        h_arr = ensure_array(h)[None, :]
+        self.atoms = np.concatenate([self.atoms, h_arr], axis=0)
+        if self.names is not None:
+            self.names.append(name or f"atom_{len(self.names)}")
+
+    def nearest(self, q: np.ndarray) -> tuple[int, float]:
+        return nearest(q, self.atoms)
+
+    def topk(self, q: np.ndarray, k: int = 5) -> tuple[np.ndarray, np.ndarray]:
+        return topk(q, self.atoms, k=k)
