@@ -108,3 +108,20 @@ def gh_similarity(a: GHVec, b: GHVec) -> float:
     prod = a.data @ b.data.conj().transpose(0, 2, 1)
     traces = np.trace(prod, axis1=1, axis2=2).real
     return float(traces.mean() / m)
+
+
+def gh_adj(a: GHVec) -> GHVec:
+    """Adjoint (per-slice conjugate transpose)."""
+    dat = a.data.conj().transpose(0, 2, 1)
+    return GHVec(dat.astype(axtype))
+
+
+def gh_unbind(a: GHVec, b: GHVec) -> GHVec:
+    """Unbind ``a`` with ``b`` via per-slice multiplication by ``b``'s adjoint."""
+    return gh_bind(a, gh_adj(b))
+
+
+def gh_project_unitary(a: GHVec) -> GHVec:
+    """Project each slice to the nearest unitary via QR."""
+    out = np.stack([_unitary_qr(a.data[j]) for j in range(a.dim)], axis=0)
+    return GHVec(out.astype(axtype))

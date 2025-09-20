@@ -6,7 +6,9 @@ Includes a lightweight grid/field encoder built from FPE and core algebra.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 
@@ -53,10 +55,11 @@ def convolve(y_f: np.ndarray | BaseVector, y_g: np.ndarray | BaseVector) -> Vec:
     return Vec(np.fft.ifft(fa * fb).astype(np.complex64))
 
 
-def encode_grid(
+def encode_grid(  # noqa: C901 - clarity over brevity for now
     values: np.ndarray,
     pos_bases: list[np.ndarray],
     value_codebook: np.ndarray | None = None,
+    value_encoder: Callable[[Any], np.ndarray] | None = None,
 ) -> Vec:
     """Encode a 2D (or ND) array by binding position codes with value encodings and bundling.
 
@@ -75,17 +78,26 @@ def encode_grid(
                 pos = encode_fpe_vec(np.array([float(i), float(j)], dtype=float), pos_bases)
                 out = out + pos * value_codebook[int(arr[i, j])]
         return Vec(out.astype(np.complex64))
-    # values contains encoded vectors: shape (..., D)
-    if arr.ndim < 3:
-        raise ValueError("values must have shape (..., D) when no codebook is provided")
+    # values contains encoded vectors: shape (..., D) or raw with encoder
+    h_, w_ = int(arr.shape[0]), int(arr.shape[1])
+    # Raw scalars require a value_encoder callable to produce HVs
+    if arr.ndim == 2:
+        if value_encoder is None:
+            raise ValueError("value_encoder must be provided when values are raw scalars")
+        d_example = pos_bases[0].shape[0]
+        out = np.zeros(d_example, dtype=np.complex64)
+        for i in range(h_):
+            for j in range(w_):
+                pos = encode_fpe_vec(np.array([float(i), float(j)], dtype=float), pos_bases)
+                val_hv = value_encoder(arr[i, j])
+                out = out + pos * val_hv
+        return Vec(out.astype(np.complex64))
+    # Encoded vectors per cell
     d_ = int(arr.shape[-1])
-    coords = np.stack(
-        np.meshgrid(np.arange(arr.shape[0]), np.arange(arr.shape[1]), indexing="ij"), axis=-1
-    )
     out = np.zeros(d_, dtype=np.complex64)
-    for i in range(arr.shape[0]):
-        for j in range(arr.shape[1]):
-            pos = encode_fpe_vec(coords[i, j].astype(float), pos_bases)
+    for i in range(h_):
+        for j in range(w_):
+            pos = encode_fpe_vec(np.array([float(i), float(j)], dtype=float), pos_bases)
             out = out + pos * arr[i, j]
     return Vec(out.astype(np.complex64))
 

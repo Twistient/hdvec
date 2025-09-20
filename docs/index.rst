@@ -8,6 +8,7 @@ Welcome to hdvec's documentation!
    HDVEC_SPEC
    HDVEC_SCALING
    quickstart_grid
+   POST_V1_ROADMAP
 
 API
 ---

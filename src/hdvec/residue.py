@@ -1,4 +1,9 @@
-"""Residue Holographic Computing (RHC) stubs."""
+"""Residue Holographic Computing (RHC).
+
+Implements multi-modulus residue encoders using FPE bases, addition via phasor
+Hadamard multiplication, and utilities for multiplicative operations and
+decoding via a lightweight resonator. See Kymn et al. (2023).
+"""
 
 from __future__ import annotations
 
@@ -7,7 +12,6 @@ from dataclasses import dataclass
 import numpy as np
 
 from .base import BaseVector, Vec
-from .core import bind
 from .fpe import encode_fpe, generate_base
 from .utils import ensure_array, phase_normalize
 
@@ -48,9 +52,79 @@ def res_add(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
     return Vec(result)
 
 
-def res_mul(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
-    """RHC multiply: placeholder using hadamard bind (⋆)."""
-    return bind(a, b, op="hadamard")
+def res_pow_scalar(
+    a: np.ndarray | BaseVector, p: int, moduli: list[int], bases: np.ndarray
+) -> Vec:
+    """Multiply an encoded residue vector by integer ``p`` (i.e., encode x*p).
+
+    Implementation decodes per-modulus residues via a light resonator, applies
+    the modular multiplication r_k' = (r_k * p) mod m_k, then re-bundles.
+    """
+    residues = resonator_decode(a, moduli, bases)
+    codebooks = build_codebooks(moduli, bases)
+    parts = []
+    for j, m in enumerate(moduli):
+        idx = (int(residues[j]) * int(p)) % int(m)
+        parts.append(codebooks[j][idx])
+    v = np.sum(parts, axis=0).astype(np.complex64)
+    return Vec(phase_normalize(v))
+
+
+def res_mul_int(a: int, b: int, moduli: list[int], bases: np.ndarray) -> Vec:
+    """Encode product of integers under the residue encoder: z(a*b).
+
+    Convenience for callers that have raw integers and the encoder's bases.
+    """
+    return encode_residue(int(a) * int(b), moduli, bases)
+
+
+def build_codebooks(moduli: list[int], bases: np.ndarray) -> list[np.ndarray]:
+    """Build per-modulus codebooks Z_k with rows z_k(r), r=0..m_k-1."""
+    zks: list[np.ndarray] = []
+    for k, m in enumerate(moduli):
+        rows = [encode_fpe(float(r), bases[k]) for r in range(int(m))]
+        zks.append(np.stack(rows, axis=0).astype(np.complex64))
+    return zks
+
+
+def resonator_decode(
+    v: np.ndarray | BaseVector,
+    moduli: list[int],
+    bases: np.ndarray,
+    steps: int = 16,
+) -> list[int]:
+    """Factor a residue-encoded vector into per-modulus residues via a simple resonator.
+
+    Iteratively updates each factor by matching against its codebook while
+    holding others fixed. Returns the list of residues r_k in [0, m_k).
+    """
+    vec = ensure_array(v)
+    codebooks = build_codebooks(moduli, bases)
+    # Initialize by direct correlation
+    indices = [int(np.argmax((zk @ np.conj(vec)).real)) for zk in codebooks]
+    # Iteratively refine by explain-away subtraction
+    for _ in range(3):
+        changed = False
+        for j, zk in enumerate(codebooks):
+            recon_others = np.zeros_like(vec)
+            for i, idx in enumerate(indices):
+                if i == j:
+                    continue
+                recon_others += codebooks[i][idx]
+            residual = vec - recon_others
+            scores = (zk @ np.conj(residual)).real
+            new_idx = int(np.argmax(scores))
+            changed = changed or (new_idx != indices[j])
+            indices[j] = new_idx
+        if not changed:
+            break
+    return indices
+
+
+def res_decode_int(v: np.ndarray | BaseVector, moduli: list[int], bases: np.ndarray) -> int:
+    """Decode a residue-encoded vector to an integer via resonator + CRT."""
+    parts = resonator_decode(v, moduli, bases)
+    return crt_reconstruct(np.array(parts, dtype=int), moduli)
 
 
 def crt_reconstruct(parts: np.ndarray, moduli: list[int]) -> int:

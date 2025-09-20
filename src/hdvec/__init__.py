@@ -52,7 +52,14 @@ from .fpe import (
 )
 from .ghrr import GHVec, gh_bind, gh_bundle, gh_similarity, sample_ghrr
 from .permute import apply_perm, dihedral_permutations, roll
-from .residue import ResidueEncoder, crt_reconstruct, encode_residue, res_add, res_mul
+from .residue import (
+    ResidueEncoder,
+    crt_reconstruct,
+    encode_residue,
+    res_add,
+    res_pow_scalar,
+    res_mul_int,
+)
 from .vfa import (
     VFAEncoder,
     convolve,
@@ -106,7 +113,8 @@ __all__ = [
     "ResidueEncoder",
     "encode_residue",
     "res_add",
-    "res_mul",
+    "res_pow_scalar",
+    "res_mul_int",
     "crt_reconstruct",
     "AnchorMemory",
     "decode_point",

@@ -235,7 +235,18 @@ def circ_corr(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
 
 
 class Codebook:
-    """Lightweight codebook of atoms with nearest/top-k cleanup utilities."""
+    """Lightweight codebook of atoms with nearest/top-k cleanup utilities.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from hdvec.core import Codebook
+    >>> C = Codebook(np.eye(3, dtype=np.complex64))
+    >>> C.nearest(np.array([1,0,0], dtype=np.complex64))
+    (0, 1.0)
+    >>> C.topk_batch(np.eye(3, dtype=np.complex64), k=1)[0].ravel().tolist()
+    [0, 1, 2]
+    """
 
     def __init__(self, atoms: np.ndarray, names: list[str] | None = None):
         if atoms.ndim != 2:
@@ -254,3 +265,14 @@ class Codebook:
 
     def topk(self, q: np.ndarray, k: int = 5) -> tuple[np.ndarray, np.ndarray]:
         return topk(q, self.atoms, k=k)
+
+    def nearest_batch(self, q: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Batch nearest neighbor by cosine.
+
+        Returns arrays of shape (N,) for indices and scores.
+        """
+        return nearest_batch(q, self.atoms)
+
+    def topk_batch(self, q: np.ndarray, k: int = 5) -> tuple[np.ndarray, np.ndarray]:
+        """Batch top‑k cosine nearest neighbors against this codebook."""
+        return topk_batch(q, self.atoms, k=k)
