@@ -37,6 +37,7 @@ Top‑level package: `hdvec`
 - `hdvec.config` — mutable global `Config` with conservative, typed fields.
 - `hdvec.base` — `BaseVector` ABC and `Vec` convenience wrapper around `np.ndarray`.
 - `hdvec.permute` — permutation registry for common families (dihedral D4, cyclic rolls) with deterministic seeds.
+ - `hdvec.ghrr` — generalized HRR with per-dimension unitary slices; bind/bundle/similarity.
 
 Unit tests live in `tests/` mirroring modules. Docs in `docs/` (Sphinx + MyST).
 

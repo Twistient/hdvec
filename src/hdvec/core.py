@@ -160,6 +160,52 @@ def nearest(query: np.ndarray, codebook: np.ndarray) -> tuple[int, float]:
     return int(idxs[0]), float(scores[0])
 
 
+def topk_batch(
+    queries: np.ndarray, codebook: np.ndarray, k: int = 5
+) -> tuple[np.ndarray, np.ndarray]:
+    """Batch top‑k cosine nearest neighbors.
+
+    Args:
+        queries: (N, D) array of query vectors.
+        codebook: (K, D) array of atoms.
+        k: number of neighbors.
+    Returns:
+        (indices, scores) each of shape (N, k).
+
+    Example:
+        >>> import numpy as np
+        >>> Q = np.eye(3, dtype=np.complex64)
+        >>> C = np.eye(3, dtype=np.complex64)
+        >>> idx, sc = topk_batch(Q, C, k=1)
+        >>> idx.ravel().tolist()
+        [0, 1, 2]
+    """
+    q = ensure_array(queries)
+    c = ensure_array(codebook)
+    # Normalize rows
+    qn = q / np.maximum(1e-12, np.linalg.norm(q, axis=1, keepdims=True))
+    cn = c / np.maximum(1e-12, np.linalg.norm(c, axis=1, keepdims=True))
+    # Cosine similarities: real part of inner product
+    sims = (qn.conj() @ cn.T).real  # (N, K)
+    # Argpartition per row
+    part = np.argpartition(-sims, kth=np.minimum(k, sims.shape[1] - 1), axis=1)[:, :k]
+    # Sort top-k per row
+    row_indices = np.arange(sims.shape[0])[:, None]
+    order = np.argsort(-sims[row_indices, part], axis=1)
+    top_idx = part[row_indices, order]
+    top_scores = sims[row_indices, top_idx]
+    return top_idx, top_scores
+
+
+def nearest_batch(queries: np.ndarray, codebook: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Batch nearest neighbor by cosine.
+
+    Returns arrays of shape (N,) for indices and scores.
+    """
+    idx, sc = topk_batch(queries, codebook, k=1)
+    return idx[:, 0], sc[:, 0]
+
+
 def circ_conv(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
     """Circular convolution via FFT (HRR form)."""
     aa = ensure_array(a)

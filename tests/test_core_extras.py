@@ -2,7 +2,17 @@ import numpy as np
 from numpy.typing import NDArray
 from typing import cast
 
-from hdvec.core import bind, circ_conv, circ_corr, nearest, project_unitary, topk, unbind
+from hdvec.core import (
+    bind,
+    circ_conv,
+    circ_corr,
+    nearest,
+    nearest_batch,
+    project_unitary,
+    topk,
+    topk_batch,
+    unbind,
+)
 
 
 def rand_phasor(dim: int, seed: int = 0) -> NDArray[np.complex64]:
@@ -45,6 +55,17 @@ def test_topk_and_nearest_basic():
     assert idxs[0] == 3
     idx, score = nearest(q, codebook)
     assert idx == 3
+
+
+def test_topk_batch_and_nearest_batch():
+    dim, k = 32, 5
+    rng = np.random.default_rng(0)
+    C = np.stack([np.exp(1j * rng.uniform(-np.pi, np.pi, size=dim)).astype(np.complex64) for _ in range(k)], axis=0)
+    Q = C.copy()  # queries identical to codebook atoms
+    idxs, scores = topk_batch(Q, C, k=1)
+    assert np.all(idxs.ravel() == np.arange(k))
+    idx1, sc1 = nearest_batch(Q, C)
+    assert np.all(idx1 == np.arange(k))
 
 
 def test_circ_conv_corr_inverse_property():

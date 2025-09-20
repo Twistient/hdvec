@@ -7,6 +7,7 @@ Welcome to hdvec's documentation!
 
    HDVEC_SPEC
    HDVEC_SCALING
+   quickstart_grid
 
 API
 ---

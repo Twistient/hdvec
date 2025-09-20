@@ -72,6 +72,9 @@ pythonpath = ["src"]
 filterwarnings = [
   "ignore::DeprecationWarning",
 ]
+markers = [
+  "slow: long-running large-D or statistical tests",
+]
 
 [tool.black]
 line-length = 100
