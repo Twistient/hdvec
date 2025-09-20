@@ -1,0 +1,6 @@
+autoupdate_schedule: quarterly
+# You can specify repos to skip here if needed
+# skip: []
+# Set to true if your repo uses git submodules
+submodules: false
+

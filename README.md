@@ -76,6 +76,12 @@ CI style checks
 - Ruff runs on both `src/` and `tests/` in CI.
 - Black enforces formatting across the repository (same as pre-commit).
 
+pre-commit.ci
+- This repository includes a `.pre-commit-config.yaml`. To run hooks server-side on PRs, install the GitHub App at:
+  https://pre-commit.ci
+- Optional server settings can be controlled by `.pre-commit-ci.yaml` (present: `autoupdate_schedule: quarterly`).
+- pre-commit.ci will run ruff (with `--fix`) and black on pull requests and push back fixes where possible.
+
 ## License
 
 LGPL-3.0-or-later (see LICENSE)
