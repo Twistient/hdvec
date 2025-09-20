@@ -69,6 +69,12 @@ print("top-1 indices:", idxs.ravel().tolist())
 - Tests: uv run pytest
 - Slow tests (large-D): mark with @pytest.mark.slow; see docs/HDVEC_SCALING.md
 - Pre-commit: pre-commit install
+  - Configure hooks: pre-commit install
+  - Run hooks on all files: pre-commit run --all-files
+
+CI style checks
+- Ruff runs on both `src/` and `tests/` in CI.
+- Black enforces formatting across the repository (same as pre-commit).
 
 ## License
 

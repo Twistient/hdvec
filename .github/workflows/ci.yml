@@ -23,7 +23,7 @@ jobs:
         run: uv pip install --system -e ".[dev]"
       - name: Lint
         run: |
-          uv run ruff check src
+          uv run ruff check src tests
           uv run black --check .
       - name: Type check
         run: uv run mypy .
@@ -46,7 +46,7 @@ jobs:
         run: uv pip install --system -e ".[dev,numba]"
       - name: Lint
         run: |
-          uv run ruff check src
+          uv run ruff check src tests
           uv run black --check .
       - name: Type check
         run: uv run mypy .
