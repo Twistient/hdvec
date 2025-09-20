@@ -11,4 +11,3 @@ def test_topk_batch_identity():
     assert np.all(idx.ravel() == np.arange(k))
     i2, s2 = nearest_batch(Q, C)
     assert np.all(i2 == np.arange(k))
-

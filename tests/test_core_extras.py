@@ -60,7 +60,10 @@ def test_topk_and_nearest_basic():
 def test_topk_batch_and_nearest_batch():
     dim, k = 32, 5
     rng = np.random.default_rng(0)
-    C = np.stack([np.exp(1j * rng.uniform(-np.pi, np.pi, size=dim)).astype(np.complex64) for _ in range(k)], axis=0)
+    C = np.stack(
+        [np.exp(1j * rng.uniform(-np.pi, np.pi, size=dim)).astype(np.complex64) for _ in range(k)],
+        axis=0,
+    )
     Q = C.copy()  # queries identical to codebook atoms
     idxs, scores = topk_batch(Q, C, k=1)
     assert np.all(idxs.ravel() == np.arange(k))
