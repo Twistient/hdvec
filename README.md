@@ -4,9 +4,14 @@
 
 Hyperdimensional Vector Computing for Python
 
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Type checked: mypy](https://img.shields.io/badge/type%20checked-mypy-blue)](http://mypy-lang.org/)
+[![License: LGPLv3](https://img.shields.io/badge/License-LGPLv3-blue.svg)](LICENSE)
+
 </div>
 
-HDVEC is a NumPy‑first, typed library for Hyperdimensional/Vector Symbolic Architectures (HDC/VSA). It provides the algebra, encoders, and utilities needed to build robust, compositional systems in high dimensions. HDVEC is designed to be general‑purpose and also serve as a core engine for HOLOGRAM (a neurosymbolic reasoning architecture).
+HDVEC is a NumPy‑first, typed library for Hyperdimensional/Vector Symbolic Architectures (HDC/VSA). It provides the algebra, encoders, and utilities needed to build robust, compositional systems in high dimensions. HDVEC is designed to be general‑purpose, research‑grade, and production‑minded.
 
 Status: alpha (APIs may evolve). Python 3.10–3.12; optional Numba acceleration.
 

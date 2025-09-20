@@ -52,9 +52,7 @@ def res_add(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
     return Vec(result)
 
 
-def res_pow_scalar(
-    a: np.ndarray | BaseVector, p: int, moduli: list[int], bases: np.ndarray
-) -> Vec:
+def res_pow_scalar(a: np.ndarray | BaseVector, p: int, moduli: list[int], bases: np.ndarray) -> Vec:
     """Multiply an encoded residue vector by integer ``p`` (i.e., encode x*p).
 
     Implementation decodes per-modulus residues via a light resonator, applies
