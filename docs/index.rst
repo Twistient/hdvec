@@ -5,10 +5,7 @@ Welcome to hdvec's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   HDVEC_SPEC
-   HDVEC_SCALING
    quickstart_grid
-   POST_V1_ROADMAP
 
 API
 ---
