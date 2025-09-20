@@ -6,6 +6,7 @@ Welcome to hdvec's documentation!
    :caption: Contents:
 
    HDVEC_SPEC
+   HDVEC_SCALING
 
 API
 ---
