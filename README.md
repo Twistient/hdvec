@@ -32,26 +32,35 @@ Status: alpha (APIs may evolve). Python 3.10–3.12; optional Numba acceleration
 - Engineering
   - Typed API, py.typed, tests, CI, Sphinx docs (MyST), pre‑commit hooks
 
-## Install
+## Development Installation
 
-Using uv (recommended):
+- Using [uv](https://github.com/astral-sh/uv) (recommended):
 
-- Create a virtual environment (Python 3.10+)
-  - `uv venv -p 3.12`
-- Activate it
-  - `source .venv/bin/activate`
-- Install (editable) with dev extras
-  - `uv pip install -e ".[dev]"`
-- Optional extras
+```bash
+# Install uv (macOS/Linux)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Clone and setup
+git clone https://github.com/Twistient/hdvec.git
+cd hdvec
+
+# Create a virtual environment (Python 3.10+)
+uv venv -p 3.12
+
+# Activate it
+source .venv/bin/activate
+
+# Install editable with dev
+uv pip install -e ".[dev]"
+```
+- Optional extras:
   - Numba: `uv pip install -e ".[dev,numba]"`
   - Torch: `uv pip install -e ".[torch]"`
   - Docs: `uv pip install -e ".[docs]"`
 
-Or with pip: `pip install -e ".[dev]"` (ensure Python 3.10+).
-
 ## Quick Examples
 
-Binding and FPE
+**Binding and FPE**
 
 ```python
 import numpy as np
@@ -68,7 +77,7 @@ z_sum = bind(z1, z2)           # enc(0.7 + 1.3)
 z1_rec = unbind(z_sum, z2)     # ≈ z1
 ```
 
-Grid/Field encoding (VFA)
+**Grid/Field encoding (VFA)**
 
 ```python
 from hdvec.vfa import encode_grid, read_cell, translate_grid
@@ -81,7 +90,7 @@ idx, score = read_cell(scene, 1, 2, [base, base], value_codebook=codebook)
 scene2 = translate_grid(scene, 1.0, 0.0, [base, base])
 ```
 
-Residue HDC (RNS overlay)
+**Residue HDC (RNS overlay)**
 
 ```python
 from hdvec.residue import ResidueEncoder, res_pow_scalar, res_decode_int
@@ -94,7 +103,7 @@ vx2 = res_pow_scalar(vx, 2, moduli, np.stack(enc_res.bases, axis=0))
 x_rec = res_decode_int(vx2, moduli, np.stack(enc_res.bases, axis=0))
 ```
 
-GHRR
+**GHRR**
 
 ```python
 from hdvec.ghrr import sample_ghrr, gh_bind, gh_unbind, gh_project_unitary
@@ -104,8 +113,6 @@ G12 = gh_bind(G1, G2)
 G1_rec = gh_unbind(G12, G2)
 G12_u = gh_project_unitary(G12)
 ```
-
-More examples: see `docs/quickstart_grid.md`.
 
 ## Use Cases
 
@@ -118,19 +125,17 @@ More examples: see `docs/quickstart_grid.md`.
 ## Design & Performance
 
 - NumPy‑first with optional Numba JIT (no‑op fallback); `complex64` default
-- Recommended D: 8k–32k for concentration effects (see docs/HDVEC_SCALING.md)
+- Recommended D: 8k–32k for concentration effects
 - CI: Python 3.10/3.11/3.12; lint (ruff), format (black), types (mypy), tests (pytest)
 
 ## References
 
-- Plate, T. (1995). Holographic Reduced Representations (HRR).
-- Kleyko, D., et al. (2022). A Survey on Hyperdimensional Computing aka Vector Symbolic Architectures, Part I.
-- Frady, E. P., et al. (2021). Computing on Functions Using Randomized Vector Representations (Vector Function Architecture).
-- Verges, C., et al. (2025). Learning encoding phasors with Fractional Power Encoding.
-- Kymn, C., et al. (2023). Computing with Residue Numbers in High‑Dimensional Representation.
-- Yeung, S., et al. (2024). Generalized Holographic Reduced Representations.
-
-(See `references/` for PDFs and notes.)
+- Plate, T. (1995). *Holographic Reduced Representations (HRR)*
+- Kanerva, P. (2009). *Hyperdimensional Computing: An Introduction to Computing in Distributed Representation*
+- Frady, E. P. et al. (2021). *Computing on Functions Using Randomized Vector Representations*
+- Kymn, C. J. et al. (2023). *Computing with Residue Numbers in High-Dimensional Representation*
+- Yeung, C. et al. (2024). *Generalized Holographic Reduced Representations*
+- Vergés, P. et al. (2025). *Learning Encoding Phasors with Fractional Power Encoding*
 
 ## Contributing
 
@@ -141,9 +146,9 @@ More examples: see `docs/quickstart_grid.md`.
 ## Versioning & Releases
 
 - Semantic versioning.
-- Current version: 0.1.0 (alpha). For initial release, cut a GitHub Release from `master` with changelog.
-- Maintain a simple CHANGELOG.md for 0.1.x → 0.2.x once slow tests & docs polish land.
+- Current version: 0.1.0 (alpha).
+- See [CHANGELOG](CHANGELOG.md) for more details.
 
 ## License
 
-See LICENSE.
+LGPLv3 - see [LICENSE](LICENSE) file for details.
