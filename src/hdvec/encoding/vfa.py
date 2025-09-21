@@ -12,10 +12,10 @@ from typing import Any
 
 import numpy as np
 
-from .base import BaseVector, Vec
-from .core import Codebook, bind, inv, similarity
+from ..base import BaseVector, Vec
+from ..core import Codebook, bind, inv, similarity
+from ..utils import ensure_array
 from .fpe import encode_fpe, encode_fpe_vec
-from .utils import ensure_array
 
 
 def encode_function(points: np.ndarray, alphas: np.ndarray, base: np.ndarray) -> Vec:

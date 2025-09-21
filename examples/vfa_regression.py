@@ -1,9 +1,9 @@
 import numpy as np
 
 from hdvec.core import bind
-from hdvec.fpe import FPEEncoder, encode_fpe, generate_base
+from hdvec.encoding.fpe import FPEEncoder, encode_fpe, generate_base
 from hdvec.utils import ensure_array
-from hdvec.vfa import VFAEncoder, encode_function, readout
+from hdvec.encoding.vfa import VFAEncoder, encode_function, readout
 
 
 def main() -> None:

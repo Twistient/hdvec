@@ -65,53 +65,74 @@ uv pip install -e ".[dev]"
 ```python
 import numpy as np
 from hdvec import bind, unbind
-from hdvec.fpe import FPEEncoder, generate_base
+from hdvec.encoding.fpe import FPEEncoder, generate_base
 
 D = 1024
 base = generate_base(D)
-enc = FPEEncoder(D=D)
+encoder = FPEEncoder(D=D)
 
-z1 = enc(0.7)
-z2 = enc(1.3)
+z1 = encoder(0.7)
+z2 = encoder(1.3)
 z_sum = bind(z1, z2)           # enc(0.7 + 1.3)
 z1_rec = unbind(z_sum, z2)     # ≈ z1
 ```
 
-**Grid/Field encoding (VFA)**
+**Grid/Field encoding (Scene)**
 
 ```python
-from hdvec.vfa import encode_grid, read_cell, translate_grid
-K = 5
-codebook = np.stack([np.exp(1j*np.random.uniform(-np.pi,np.pi,size=D)).astype(np.complex64)
-                     for _ in range(K)], axis=0)
-values = (np.arange(16) % K).reshape(4,4)
-scene = encode_grid(values, [base, base], value_codebook=codebook)
-idx, score = read_cell(scene, 1, 2, [base, base], value_codebook=codebook)
-scene2 = translate_grid(scene, 1.0, 0.0, [base, base])
+import numpy as np
+from hdvec.encoding.scene import FieldEncoder
+from hdvec.encoding.positional import Positional2DTorus
+
+D = 1024
+positional = Positional2DTorus(D, beta=0.5)
+rng = np.random.default_rng(0)
+codebook = np.stack(
+    [np.exp(1j * rng.uniform(-np.pi, np.pi, size=D)).astype(np.complex64) for _ in range(4)],
+    axis=0,
+)
+values = (np.arange(16) % 4).reshape(4, 4)
+encoder = FieldEncoder(positional=positional, value_codebook=codebook)
+scene = encoder.encode_grid(values)
+idx, score = encoder.read_cell(scene, 1, 2, values.shape)
+scene_shifted = encoder.translate(scene, 1.0, 0.0)
 ```
 
 **Residue HDC (RNS overlay)**
 
 ```python
-from hdvec.residue import ResidueEncoder, res_pow_scalar, res_decode_int
+from hdvec.encoding.residue import ResidueEncoder, res_pow_scalar, res_decode_int
+
 moduli = [3, 5]
 enc_res = ResidueEncoder(moduli=moduli, D=D)
 vx = enc_res(7)
 # multiply by integer k=2 via per‑modulus decode + rebundle
-vx2 = res_pow_scalar(vx, 2, moduli, np.stack(enc_res.bases, axis=0))
+vx2 = res_pow_scalar(vx, 2, enc_res.bases)
 # decode to integer via per‑modulus residues + CRT
-x_rec = res_decode_int(vx2, moduli, np.stack(enc_res.bases, axis=0))
+x_rec = res_decode_int(vx2, enc_res.bases)
 ```
 
 **GHRR**
 
 ```python
 from hdvec.ghrr import sample_ghrr, gh_bind, gh_unbind, gh_project_unitary
+
 G1 = sample_ghrr(8, 2)
 G2 = sample_ghrr(8, 2)
 G12 = gh_bind(G1, G2)
 G1_rec = gh_unbind(G12, G2)
 G12_u = gh_project_unitary(G12)
+```
+
+**Boolean Logic**
+
+```python
+from hdvec.encoding.boolean import BooleanEncoder, logic_and
+
+encoder = BooleanEncoder(D=64)
+a = encoder.encode(1)
+b = encoder.encode(0)
+result = logic_and(a, b, encoder)  # encodes 0
 ```
 
 ## Use Cases

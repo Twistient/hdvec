@@ -1,7 +1,9 @@
 import numpy as np
+import pytest
 from numpy.typing import NDArray
 from typing import cast
 
+from hdvec.config import get_config
 from hdvec.core import (
     bind,
     circ_conv,
@@ -13,6 +15,7 @@ from hdvec.core import (
     topk_batch,
     unbind,
 )
+from hdvec.errors import ConfigurationError, InvalidBindingError
 
 
 def rand_phasor(dim: int, seed: int = 0) -> NDArray[np.complex64]:
@@ -83,3 +86,61 @@ def test_circ_conv_corr_inverse_property():
     a_rec = np.fft.ifft(fc / (fb + 1e-9))
     err = np.linalg.norm(np.asarray(a) - a_rec) / np.sqrt(dim)
     assert err < 1e-3
+
+
+def test_lcc_binding_matches_manual_fft():
+    cfg = get_config()
+    old_blocks = cfg.lcc_blocks
+    cfg.lcc_blocks = 4
+    try:
+        dim = 64
+        rng = np.random.default_rng(0)
+        a = np.exp(1j * rng.uniform(-np.pi, np.pi, size=dim)).astype(np.complex64)
+        b = np.exp(1j * rng.uniform(-np.pi, np.pi, size=dim)).astype(np.complex64)
+        result = np.asarray(bind(a, b, op="lcc"))
+        block_len = dim // cfg.lcc_blocks
+        fa = np.fft.fft(a.reshape(cfg.lcc_blocks, block_len), axis=-1)
+        fb = np.fft.fft(b.reshape(cfg.lcc_blocks, block_len), axis=-1)
+        expected = np.fft.ifft(fa * fb, axis=-1).reshape(dim).astype(np.complex64)
+        assert np.allclose(result, expected, atol=1e-6)
+    finally:
+        cfg.lcc_blocks = old_blocks
+
+
+def test_lcc_binding_batched():
+    cfg = get_config()
+    old_blocks = cfg.lcc_blocks
+    cfg.lcc_blocks = 2
+    try:
+        batch, dim = 3, 32
+        rng = np.random.default_rng(1)
+        a = np.exp(1j * rng.uniform(-np.pi, np.pi, size=(batch, dim))).astype(np.complex64)
+        b = np.exp(1j * rng.uniform(-np.pi, np.pi, size=(batch, dim))).astype(np.complex64)
+        result = np.asarray(bind(a, b, op="lcc"))
+        block_len = dim // cfg.lcc_blocks
+        fa = np.fft.fft(a.reshape(batch, cfg.lcc_blocks, block_len), axis=-1)
+        fb = np.fft.fft(b.reshape(batch, cfg.lcc_blocks, block_len), axis=-1)
+        expected = np.fft.ifft(fa * fb, axis=-1).reshape(batch, dim).astype(np.complex64)
+        assert np.allclose(result, expected, atol=1e-6)
+    finally:
+        cfg.lcc_blocks = old_blocks
+
+
+def test_lcc_binding_requires_config():
+    cfg = get_config()
+    old_blocks = cfg.lcc_blocks
+    cfg.lcc_blocks = None
+    try:
+        a = np.ones(16, dtype=np.complex64)
+        b = np.ones(16, dtype=np.complex64)
+        with pytest.raises(ConfigurationError):
+            bind(a, b, op="lcc")
+    finally:
+        cfg.lcc_blocks = old_blocks
+
+
+def test_bind_invalid_operator():
+    a = np.ones(8)
+    b = np.ones(8)
+    with pytest.raises(InvalidBindingError):
+        bind(a, b, op="unknown")

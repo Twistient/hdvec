@@ -6,16 +6,15 @@ HDVEC lets you encode grids (e.g., ARC panels) into a single hypervector using F
 
 ```python
 import numpy as np
-from hdvec.fpe import generate_base
-from hdvec.vfa import encode_grid, read_cell, translate_grid
+from hdvec.encoding.fpe import generate_base
+from hdvec.encoding.positional import Positional2DTorus
+from hdvec.encoding.scene import FieldEncoder
 
 # Vector dimension
 D = 1024
 
-# Positional bases for (u, v)
-base_u = generate_base(D)
-base_v = generate_base(D)
-pos_bases = [base_u, base_v]
+# Positional encoder for (u, v)
+positional = Positional2DTorus(D, beta=0.5)
 
 # Codebook of K values/colors (here random phasors)
 K = 5
@@ -30,18 +29,18 @@ H, W = 4, 4
 values = (np.arange(H*W) % K).reshape(H, W)
 
 # Encode to a single scene hypervector
-scene = encode_grid(values, pos_bases, value_codebook=codebook)
+encoder = FieldEncoder(positional=positional, value_codebook=codebook)
+scene = encoder.encode_grid(values)
 
 # Read back a cell (i, j)
 i, j = 2, 3
-idx, score = read_cell(scene, i, j, pos_bases, value_codebook=codebook)
+idx, score = encoder.read_cell(scene, i, j, (H, W))
 print("decoded index:", int(idx), "cosine:", float(score))
 
 # Translate by (+1, 0)
-scene_shift = translate_grid(scene, 1.0, 0.0, pos_bases)
+scene_shift = encoder.translate(scene, 1.0, 0.0)
 ```
 
 Notes
 - Position codes use separable FPE bases; translation is a Hadamard bind with the translation code.
 - You can substitute learned codebooks or FPE‑encoded continuous values for richer scenes.
-

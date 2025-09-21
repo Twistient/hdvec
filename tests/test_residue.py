@@ -1,6 +1,6 @@
 import numpy as np
 
-from hdvec.residue import ResidueEncoder, crt_reconstruct, res_add
+from hdvec.encoding.residue import ResidueEncoder, crt_reconstruct, res_add
 
 
 def test_crt_small():

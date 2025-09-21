@@ -2,7 +2,7 @@ import timeit
 import numpy as np
 
 from hdvec.core import bind, similarity
-from hdvec.fpe import generate_base, encode_fpe
+from hdvec.encoding.fpe import generate_base, encode_fpe
 
 
 def main() -> None:

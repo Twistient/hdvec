@@ -1,6 +1,6 @@
 import numpy as np
-from hdvec.fpe import generate_base
-from hdvec.vfa import encode_grid, read_cell, translate_grid
+from hdvec.encoding.fpe import generate_base
+from hdvec.encoding.vfa import encode_grid, read_cell, translate_grid
 
 
 def rand_codebook(k: int, dim: int, seed: int = 0) -> np.ndarray:

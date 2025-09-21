@@ -1,6 +1,6 @@
 import numpy as np
 
-from hdvec.fpe import (
+from hdvec.encoding.fpe import (
     encode_boolean,
     encode_circular,
     encode_fpe,

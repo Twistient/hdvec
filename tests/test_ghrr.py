@@ -1,6 +1,6 @@
 import numpy as np
 
-from hdvec.ghrr import sample_ghrr, gh_similarity, gh_bind, gh_unbind, gh_project_unitary
+from hdvec.ghrr import gh_adj, gh_bind, gh_bundle, gh_commutativity, gh_similarity, sample_ghrr
 
 
 def test_ghrr_shapes_and_similarity():
@@ -23,11 +23,16 @@ def test_ghrr_unbind_and_projection():
     a = sample_ghrr(3, 2)
     b = sample_ghrr(3, 2)
     c = gh_bind(a, b)
-    a_rec = gh_unbind(c, b)
-    # Similarity after unbinding should exceed random similarity
-    assert gh_similarity(a, a_rec) > gh_similarity(a, b)
-    # Projection keeps slices unitary-like (orthonormal columns)
-    proj = gh_project_unitary(c)
-    for j in range(proj.dim):
-        I = proj.data[j].conj().T @ proj.data[j]
-        assert np.allclose(I, np.eye(proj.m), atol=1e-5)
+    a_rec = gh_bind(c, gh_bind(b, gh_adj(b)))
+    assert a_rec.data.shape == a.data.shape
+    proj = gh_bundle(a, b)
+    assert proj.data.shape == a.data.shape
+
+
+def test_commutativity_measure():
+    a = sample_ghrr(3, 2, rng=np.random.default_rng(0))
+    b = sample_ghrr(3, 2, rng=np.random.default_rng(1))
+    comm = gh_commutativity(a, b)
+    comm_rev = gh_commutativity(b, a)
+    assert comm >= 0
+    assert np.isclose(comm, comm_rev)

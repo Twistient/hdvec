@@ -23,10 +23,22 @@ API
 .. automodule:: hdvec.core
    :members:
 
-.. automodule:: hdvec.fpe
+.. automodule:: hdvec.encoding.fpe
    :members:
 
-.. automodule:: hdvec.vfa
+.. automodule:: hdvec.encoding.fpe_learned
+   :members:
+
+.. automodule:: hdvec.encoding.boolean
+   :members:
+
+.. automodule:: hdvec.encoding.positional
+   :members:
+
+.. automodule:: hdvec.encoding.scene
+   :members:
+
+.. automodule:: hdvec.encoding.vfa
    :members:
 
 .. automodule:: hdvec.permute

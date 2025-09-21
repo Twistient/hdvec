@@ -1,7 +1,7 @@
 import numpy as np
 
-from hdvec.fpe import generate_base
-from hdvec.vfa import VFAEncoder, encode_function, readout
+from hdvec.encoding.fpe import generate_base
+from hdvec.encoding.vfa import VFAEncoder, encode_function, readout
 
 
 def test_encode_and_readout_runs():

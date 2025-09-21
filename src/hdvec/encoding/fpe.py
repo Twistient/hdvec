@@ -6,37 +6,85 @@ Minimal stubs: unit-modulus bases and componentwise exponentiation.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Iterable, Literal
 
 import numpy as np
 
-from .utils import phase_normalize
+from ..utils import ensure_array, phase_normalize
+from .kernels import estimate_kernel
+
+
+__all__ = [
+    "generate_base",
+    "encode_fpe",
+    "encode_fpe_vec",
+    "make_circular_base",
+    "encode_circular",
+    "encode_boolean",
+    "FPEEncoder",
+    "estimate_kernel",
+    "readout",
+    "shift",
+    "convolve",
+    "probe",
+]
 
 
 def generate_base(
     d: int,
-    dist: Literal["uniform", "cauchy"] = "uniform",
+    dist: Literal["uniform", "gaussian", "laplace", "cauchy", "student", "mixture"] = "uniform",
     unitary: bool = True,
     rng: np.random.Generator | None = None,
+    *,
+    beta: float = 1.0,
+    mixture_weights: Iterable[float] | None = None,
 ) -> np.ndarray:
     """Generate a complex unit-modulus base vector of length D.
 
     Args:
         d: Dimensionality.
-        dist: Phase distribution ("uniform" or "cauchy").
+        dist: Phase distribution.
         unitary: If True, enforce unit modulus.
         rng: Optional RNG.
+        beta: Bandwidth parameter controlling spread.
+        mixture_weights: Optional weights for mixture distribution.
     """
     if rng is None:
         rng = np.random.default_rng()
-    if dist == "uniform":
-        phases = rng.uniform(-np.pi, np.pi, size=d)
-    elif dist == "cauchy":
-        phases = np.arctan(rng.standard_cauchy(size=d))  # squashed tails
-    else:
-        raise ValueError(f"Unknown dist: {dist}")
+    phases = _sample_phases(dist, d, rng, beta=beta, mixture_weights=mixture_weights)
     base = np.exp(1j * phases).astype(np.complex64)
     return phase_normalize(base) if unitary else base
+
+
+def _sample_phases(
+    dist: str,
+    size: int,
+    rng: np.random.Generator,
+    *,
+    beta: float = 1.0,
+    mixture_weights: Iterable[float] | None = None,
+) -> np.ndarray:
+    if dist == "uniform":
+        return rng.uniform(-np.pi, np.pi, size=size)
+    if dist == "gaussian":
+        return rng.normal(loc=0.0, scale=beta, size=size)
+    if dist == "laplace":
+        return rng.laplace(loc=0.0, scale=beta, size=size)
+    if dist == "cauchy":
+        return np.arctan(rng.standard_cauchy(size=size) * beta)
+    if dist == "student":
+        return rng.standard_t(df=max(beta, 1.0), size=size)
+    if dist == "mixture":
+        if mixture_weights is None:
+            raise ValueError("mixture distribution requires mixture_weights")
+        weights = np.asarray(list(mixture_weights), dtype=float)
+        weights = weights / weights.sum()
+        components = [rng.normal(0.0, beta * (i + 1), size=size) for i in range(len(weights))]
+        samples = np.zeros(size, dtype=float)
+        for w, comp in zip(weights, components, strict=False):
+            samples += w * comp
+        return samples
+    raise ValueError(f"Unknown dist: {dist}")
 
 
 def encode_fpe(r: float, base: np.ndarray) -> np.ndarray:
@@ -61,6 +109,30 @@ def encode_fpe_vec(x: np.ndarray, bases: list[np.ndarray]) -> np.ndarray:
     for k, b in enumerate(bases):
         out = out * encode_fpe(float(x[k]), b)
     return out.astype(np.complex64)
+
+
+def readout(y_f: np.ndarray, s: float, base: np.ndarray) -> float:
+    """Evaluate the represented function at ``s`` via inner product."""
+    y = ensure_array(y_f).astype(np.complex64)
+    probe = encode_fpe(s, base)
+    denom = max(1, probe.size)
+    return float((np.conj(probe) * y).sum().real / denom)
+
+
+def shift(y_f: np.ndarray, delta: float, base: np.ndarray) -> np.ndarray:
+    """Shift the represented function by ``delta`` using binding."""
+    return encode_fpe(delta, base) * ensure_array(y_f)
+
+
+def convolve(y_f: np.ndarray, y_g: np.ndarray) -> np.ndarray:
+    """Convolve two function representations via elementwise multiply."""
+    return ensure_array(y_f) * ensure_array(y_g)
+
+
+def probe(y_f: np.ndarray, xs: Iterable[float], base: np.ndarray) -> np.ndarray:
+    """Evaluate ``y_f`` at multiple points specified in ``xs``."""
+    values = [readout(y_f, float(s), base) for s in xs]
+    return np.asarray(values, dtype=np.float64)
 
 
 def make_circular_base(d: int, period: int, rng: np.random.Generator | None = None) -> np.ndarray:

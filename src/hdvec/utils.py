@@ -71,6 +71,13 @@ def phase_normalize(v: np.ndarray) -> np.ndarray:
     return v
 
 
+def l2_normalize(v: np.ndarray, *, eps: float = 1e-12) -> np.ndarray:
+    norm = float(np.linalg.norm(v))
+    if norm < eps:
+        return v
+    return (v / norm).astype(v.dtype, copy=False)
+
+
 def hermitian_enforce(a: np.ndarray) -> np.ndarray:
     """Best-effort Hermitian/conjugate symmetry enforcement.
 

@@ -16,6 +16,19 @@ import numpy as np
 axtype = np.complex64
 
 
+__all__ = [
+    "GHVec",
+    "sample_ghrr",
+    "gh_bind",
+    "gh_bundle",
+    "gh_similarity",
+    "gh_commutativity",
+    "gh_adj",
+    "gh_unbind",
+    "gh_project_unitary",
+]
+
+
 @dataclass
 class GHVec:
     """Hypervector of per-dimension (m×m) complex matrices.
@@ -108,6 +121,14 @@ def gh_similarity(a: GHVec, b: GHVec) -> float:
     prod = a.data @ b.data.conj().transpose(0, 2, 1)
     traces = np.trace(prod, axis1=1, axis2=2).real
     return float(traces.mean() / m)
+
+
+def gh_commutativity(a: GHVec, b: GHVec) -> float:
+    """Return Frobenius norm of the commutator for diagnostics."""
+    if a.data.shape != b.data.shape:
+        raise ValueError("Shape mismatch")
+    comm = a.data @ b.data - b.data @ a.data
+    return float(np.linalg.norm(comm) / max(1, comm.size))
 
 
 def gh_adj(a: GHVec) -> GHVec:

@@ -22,11 +22,10 @@ except PackageNotFoundError:  # pragma: no cover - local editable import
     __version__ = "0.0.0"
 
 # Re-exports for convenience (organized and deduplicated)
-from .base import BaseVector
+from .base import BaseVector, Vec
 from .config import Config, get_config
 from .core import (
     Codebook,
-    Vec,
     bind,
     bundle,
     circ_corr,
@@ -40,8 +39,16 @@ from .core import (
     topk,
     unbind,
 )
-from .decoding import AnchorMemory, decode_function, decode_point, resonator_decode
-from .fpe import (
+from .decoding import AnchorMemory, decode_point
+from .encoding.boolean import (
+    BooleanEncoder,
+    apply_truth_table,
+    logic_and,
+    logic_not,
+    logic_or,
+    logic_xor,
+)
+from .encoding.fpe import (
     FPEEncoder,
     encode_boolean,
     encode_circular,
@@ -50,17 +57,20 @@ from .fpe import (
     generate_base,
     make_circular_base,
 )
-from .ghrr import GHVec, gh_bind, gh_bundle, gh_similarity, sample_ghrr
-from .permute import apply_perm, dihedral_permutations, roll
-from .residue import (
+from .encoding.fpe_learned import LEPConfig, LEPModel, lep_encode, lep_init, lep_step
+from .encoding.positional import Positional2DTorus, ResidueTorus
+from .encoding.residue import (
+    ResidueBases,
     ResidueEncoder,
     crt_reconstruct,
     encode_residue,
+    residue_correlations,
+    residue_initial_guess,
     res_add,
-    res_pow_scalar,
     res_mul_int,
+    res_pow_scalar,
 )
-from .vfa import (
+from .encoding.vfa import (
     VFAEncoder,
     convolve,
     encode_function,
@@ -70,6 +80,9 @@ from .vfa import (
     shift,
     translate_grid,
 )
+from .encoding.scene import FieldEncoder
+from .ghrr import GHVec, gh_adj, gh_bind, gh_bundle, gh_commutativity, gh_similarity, gh_unbind, gh_project_unitary, sample_ghrr
+from .permute import apply_perm, dihedral_permutations, roll
 
 __all__ = [
     "__version__",
@@ -97,6 +110,19 @@ __all__ = [
     "make_circular_base",
     "encode_circular",
     "encode_boolean",
+    "LEPConfig",
+    "LEPModel",
+    "lep_init",
+    "lep_encode",
+    "lep_step",
+    "BooleanEncoder",
+    "logic_not",
+    "logic_and",
+    "logic_or",
+    "logic_xor",
+    "apply_truth_table",
+    "Positional2DTorus",
+    "ResidueTorus",
     "VFAEncoder",
     "encode_function",
     "readout",
@@ -105,21 +131,27 @@ __all__ = [
     "encode_grid",
     "translate_grid",
     "read_cell",
+    "FieldEncoder",
     "GHVec",
     "sample_ghrr",
+    "gh_adj",
     "gh_bind",
     "gh_bundle",
     "gh_similarity",
+    "gh_commutativity",
+    "gh_unbind",
+    "gh_project_unitary",
+    "ResidueBases",
     "ResidueEncoder",
     "encode_residue",
+    "residue_correlations",
+    "residue_initial_guess",
     "res_add",
     "res_pow_scalar",
     "res_mul_int",
     "crt_reconstruct",
     "AnchorMemory",
     "decode_point",
-    "decode_function",
-    "resonator_decode",
     "roll",
     "dihedral_permutations",
     "apply_perm",

@@ -8,12 +8,46 @@ decoding via a lightweight resonator. See Kymn et al. (2023).
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Iterable, Sequence
 
 import numpy as np
 
-from .base import BaseVector, Vec
+from ..base import BaseVector, Vec
+from ..utils import ensure_array, phase_normalize
 from .fpe import encode_fpe, generate_base
-from .utils import ensure_array, phase_normalize
+
+
+@dataclass
+class ResidueBases:
+    """Reusable container for residue base vectors and codebooks."""
+
+    moduli: list[int]
+    stack: np.ndarray  # shape (K, D)
+    _codebooks: list[np.ndarray] | None = None
+
+    @property
+    def D(self) -> int:
+        return int(self.stack.shape[1])
+
+    @property
+    def codebooks(self) -> list[np.ndarray]:
+        if self._codebooks is None:
+            self._codebooks = build_codebooks(self.moduli, self.stack)
+        return self._codebooks
+
+    @classmethod
+    def from_moduli(
+        cls,
+        moduli: Sequence[int],
+        D: int,
+        *,
+        rng: np.random.Generator | None = None,
+    ) -> "ResidueBases":
+        if rng is None:
+            rng = np.random.default_rng()
+        bases = [generate_base(D, rng=rng) for _ in moduli]
+        stack = np.stack(bases, axis=0)
+        return cls(list(moduli), stack)
 
 
 @dataclass
@@ -22,24 +56,20 @@ class ResidueEncoder:
     D: int
 
     def __post_init__(self) -> None:
-        # One base per modulus
-        self.bases = [generate_base(self.D) for _ in self.moduli]
+        self.bases = ResidueBases.from_moduli(self.moduli, self.D)
 
     def __call__(self, x: int) -> Vec:
-        return encode_residue(x, self.moduli, np.stack(self.bases, axis=0))
+        return encode_residue(x, self.bases)
 
 
-def encode_residue(x: int, moduli: list[int], bases: np.ndarray) -> Vec:
-    """Encode integer x under multiple moduli using FPE-style roots of unity."""
-    if bases.shape[0] != len(moduli):
-        raise ValueError("bases must have shape (len(moduli), D)")
+def encode_residue(x: int, bases: ResidueBases | np.ndarray, moduli: Iterable[int] | None = None) -> Vec:
+    """Encode integer ``x`` using residue bases."""
+    stack, mods = _resolve_bases_and_moduli(bases, moduli)
     parts = []
-    for k, m in enumerate(moduli):
-        # Represent x mod m via exponentiation on the base
+    for k, m in enumerate(mods):
         r = float(x % m)
-        z_m = encode_fpe(r, bases[k])
+        z_m = encode_fpe(r, stack[k])
         parts.append(z_m)
-    # Bundle across moduli
     v = np.sum(parts, axis=0).astype(np.complex64)
     return Vec(phase_normalize(v))
 
@@ -52,28 +82,40 @@ def res_add(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector) -> Vec:
     return Vec(result)
 
 
-def res_pow_scalar(a: np.ndarray | BaseVector, p: int, moduli: list[int], bases: np.ndarray) -> Vec:
+def res_pow_scalar(
+    a: np.ndarray | BaseVector,
+    p: int,
+    bases: ResidueBases | np.ndarray,
+    moduli: Iterable[int] | None = None,
+) -> Vec:
     """Multiply an encoded residue vector by integer ``p`` (i.e., encode x*p).
 
     Implementation decodes per-modulus residues via a light resonator, applies
     the modular multiplication r_k' = (r_k * p) mod m_k, then re-bundles.
     """
-    residues = resonator_decode(a, moduli, bases)
-    codebooks = build_codebooks(moduli, bases)
+    stack, mods = _resolve_bases_and_moduli(bases, moduli)
+    residues = resonator_decode(a, stack, mods)
+    codebooks = build_codebooks(mods, stack)
     parts = []
-    for j, m in enumerate(moduli):
+    for j, m in enumerate(mods):
         idx = (int(residues[j]) * int(p)) % int(m)
         parts.append(codebooks[j][idx])
     v = np.sum(parts, axis=0).astype(np.complex64)
     return Vec(phase_normalize(v))
 
 
-def res_mul_int(a: int, b: int, moduli: list[int], bases: np.ndarray) -> Vec:
+def res_mul_int(
+    a: int,
+    b: int,
+    bases: ResidueBases | np.ndarray,
+    moduli: Iterable[int] | None = None,
+) -> Vec:
     """Encode product of integers under the residue encoder: z(a*b).
 
     Convenience for callers that have raw integers and the encoder's bases.
     """
-    return encode_residue(int(a) * int(b), moduli, bases)
+    stack, mods = _resolve_bases_and_moduli(bases, moduli)
+    return encode_residue(int(a) * int(b), stack, mods)
 
 
 def build_codebooks(moduli: list[int], bases: np.ndarray) -> list[np.ndarray]:
@@ -85,10 +127,39 @@ def build_codebooks(moduli: list[int], bases: np.ndarray) -> list[np.ndarray]:
     return zks
 
 
+def residue_correlations(
+    v: np.ndarray | BaseVector,
+    bases: ResidueBases | np.ndarray,
+    moduli: Iterable[int] | None = None,
+) -> list[np.ndarray]:
+    """Return per‑modulus correlation scores against each codebook row.
+
+    For each modulus m_k, returns a 1‑D array of shape (m_k,) with real scores
+    (cosine-like) computed as (Z_k @ conj(v)).real.
+    """
+    vec = ensure_array(v)
+    stack, mods = _resolve_bases_and_moduli(bases, moduli)
+    codebooks = build_codebooks(mods, stack)
+    scores: list[np.ndarray] = []
+    for zk in codebooks:
+        scores.append((zk @ np.conj(vec)).real.astype(np.float64))
+    return scores
+
+
+def residue_initial_guess(
+    v: np.ndarray | BaseVector,
+    bases: ResidueBases | np.ndarray,
+    moduli: Iterable[int] | None = None,
+) -> list[int]:
+    """Return argmax indices per modulus as an initial residue estimate."""
+    sc = residue_correlations(v, bases, moduli)
+    return [int(np.argmax(s)) for s in sc]
+
+
 def resonator_decode(
     v: np.ndarray | BaseVector,
-    moduli: list[int],
-    bases: np.ndarray,
+    bases: ResidueBases | np.ndarray,
+    moduli: Iterable[int] | None = None,
     steps: int = 16,
 ) -> list[int]:
     """Factor a residue-encoded vector into per-modulus residues via a simple resonator.
@@ -97,7 +168,8 @@ def resonator_decode(
     holding others fixed. Returns the list of residues r_k in [0, m_k).
     """
     vec = ensure_array(v)
-    codebooks = build_codebooks(moduli, bases)
+    stack, mods = _resolve_bases_and_moduli(bases, moduli)
+    codebooks = build_codebooks(mods, stack)
     # Initialize by direct correlation
     indices = [int(np.argmax((zk @ np.conj(vec)).real)) for zk in codebooks]
     # Iteratively refine by explain-away subtraction
@@ -119,10 +191,34 @@ def resonator_decode(
     return indices
 
 
-def res_decode_int(v: np.ndarray | BaseVector, moduli: list[int], bases: np.ndarray) -> int:
+def res_decode_int(
+    v: np.ndarray | BaseVector,
+    bases: ResidueBases | np.ndarray,
+    moduli: Iterable[int] | None = None,
+) -> int:
     """Decode a residue-encoded vector to an integer via resonator + CRT."""
-    parts = resonator_decode(v, moduli, bases)
-    return crt_reconstruct(np.array(parts, dtype=int), moduli)
+    stack, mods = _resolve_bases_and_moduli(bases, moduli)
+    parts = resonator_decode(v, stack, mods)
+    return crt_reconstruct(np.array(parts, dtype=int), mods)
+
+
+def _resolve_bases_and_moduli(
+    bases: ResidueBases | np.ndarray,
+    moduli: Iterable[int] | None,
+) -> tuple[np.ndarray, list[int]]:
+    if isinstance(bases, ResidueBases):
+        mods = bases.moduli
+        stack = bases.stack
+        if moduli is not None and list(moduli) != mods:
+            raise ValueError("Provided moduli do not match ResidueBases")
+        return stack, mods
+    stack = np.asarray(bases)
+    if moduli is None:
+        raise ValueError("moduli must be provided when passing raw base array")
+    mods_list = list(moduli)
+    if stack.shape[0] != len(mods_list):
+        raise ValueError("bases must have shape (len(moduli), D)")
+    return stack, mods_list
 
 
 def crt_reconstruct(parts: np.ndarray, moduli: list[int]) -> int:

@@ -1,6 +1,6 @@
 import numpy as np
 
-from hdvec.residue import ResidueEncoder, res_add, crt_reconstruct
+from hdvec.encoding.residue import ResidueEncoder, res_add, crt_reconstruct
 
 
 def main() -> None:

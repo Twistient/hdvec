@@ -1,4 +1,9 @@
-"""Decoding utilities: anchors, simple matching, and resonator stub."""
+"""Decoding utilities (stateless).
+
+This module intentionally contains only stateless helpers that do not implement
+iterative dynamics. Runtime decoders (e.g., resonator networks) belong in a
+downstream package (e.g., hologram-resonator).
+"""
 
 from __future__ import annotations
 
@@ -25,13 +30,4 @@ def decode_point(y: np.ndarray, anchors: np.ndarray, beta: float = 1.5) -> int:
     return mem.query(y)
 
 
-def decode_function(y_f: np.ndarray, query: np.ndarray, iters: int = 10) -> np.ndarray:
-    """Placeholder: return the query unchanged (no matching pursuit in stub)."""
-    _ = iters
-    return query
-
-
-def resonator_decode(enc: np.ndarray, moduli: list[int]) -> dict:
-    """Stub resonator decode: returns empty result."""
-    _ = (enc, moduli)
-    return {}
+__all__ = ["AnchorMemory", "decode_point"]
