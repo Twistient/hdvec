@@ -7,8 +7,8 @@ decoding via a lightweight resonator. See Kymn et al. (2023).
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Sequence
 
 import numpy as np
 
@@ -26,7 +26,7 @@ class ResidueBases:
     _codebooks: list[np.ndarray] | None = None
 
     @property
-    def D(self) -> int:
+    def D(self) -> int:  # noqa: N802
         return int(self.stack.shape[1])
 
     @property
@@ -39,10 +39,10 @@ class ResidueBases:
     def from_moduli(
         cls,
         moduli: Sequence[int],
-        D: int,
+        D: int,  # noqa: N803
         *,
         rng: np.random.Generator | None = None,
-    ) -> "ResidueBases":
+    ) -> ResidueBases:
         if rng is None:
             rng = np.random.default_rng()
         bases = [generate_base(D, rng=rng) for _ in moduli]

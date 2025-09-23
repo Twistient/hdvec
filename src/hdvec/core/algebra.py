@@ -9,7 +9,6 @@ from ..config import get_config
 from ..errors import BundlingModeError, ConfigurationError, InvalidBindingError, ShapeMismatchError
 from ..utils import ensure_array, phase_normalize
 
-
 __all__ = [
     "bind",
     "inv",
@@ -63,7 +62,7 @@ def unbind(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector, *, op: str = 
     return bind(a, inv(b), op=op)
 
 
-def bundle(
+def bundle(  # noqa: C901
     *vectors: np.ndarray | BaseVector,
     normalize: str = "phasor",
     weights: np.ndarray | list[float] | tuple[float, ...] | None = None,

@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Dict, Iterable, Tuple
 
 import numpy as np
 
 # core codebook
 from ..core.codebook import Codebook
-from ..utils import ensure_array, phase_normalize
+from ..utils import ensure_array
 from .fpe import encode_boolean, make_circular_base
 
 __all__ = [
@@ -94,14 +94,14 @@ def logic_xor_vector(vec_a: np.ndarray, vec_b: np.ndarray, encoder: BooleanEncod
     return _binary_logic_vector(vec_a, vec_b, {(0, 0): 0, (0, 1): 1, (1, 0): 1, (1, 1): 0}, encoder)
 
 
-def apply_truth_table(inputs: Tuple[int, int], table: Dict[Tuple[int, int], int]) -> int:
+def apply_truth_table(inputs: tuple[int, int], table: dict[tuple[int, int], int]) -> int:
     return table[inputs]
 
 
 def _binary_logic_vector(
     vec_a: np.ndarray,
     vec_b: np.ndarray,
-    truth_table: Dict[Tuple[int, int], int],
+    truth_table: dict[tuple[int, int], int],
     encoder: BooleanEncoder,
 ) -> np.ndarray:
     arr_a = ensure_array(vec_a)

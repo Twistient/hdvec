@@ -5,14 +5,14 @@ Minimal stubs: unit-modulus bases and componentwise exponentiation.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable, Literal
+from typing import Literal
 
 import numpy as np
 
 from ..utils import ensure_array, phase_normalize
 from .kernels import estimate_kernel
-
 
 __all__ = [
     "generate_base",

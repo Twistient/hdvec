@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Dict
 
 __all__ = [
     "Backend",
@@ -30,7 +30,7 @@ class Backend:
             self.array_module = np
 
 
-_BACKENDS: Dict[str, Backend] = {}
+_BACKENDS: dict[str, Backend] = {}
 _CURRENT: str = "numpy"
 
 

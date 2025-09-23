@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Literal
+from typing import Literal
 
 import numpy as np
 
 from ..utils import phase_normalize
-
 
 __all__ = ["LEPConfig", "LEPModel", "lep_init", "lep_encode", "lep_step"]
 
@@ -58,11 +58,13 @@ def lep_step(
     return LEPModel(base=updated, beta=beta)
 
 
-def _sample_family(family: str, D: int, beta: float, rng: np.random.Generator) -> np.ndarray:
+def _sample_family(
+    family: str, dim: int, beta: float, rng: np.random.Generator
+) -> np.ndarray:
     if family == "gaussian":
-        return rng.normal(0.0, beta, size=D)
+        return rng.normal(0.0, beta, size=dim)
     if family == "laplace":
-        return rng.laplace(0.0, beta, size=D)
+        return rng.laplace(0.0, beta, size=dim)
     if family == "cauchy":
-        return np.arctan(rng.standard_cauchy(size=D) * beta)
+        return np.arctan(rng.standard_cauchy(size=dim) * beta)
     raise ValueError(f"Unknown family: {family}")

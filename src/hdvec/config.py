@@ -52,7 +52,7 @@ def get_config() -> Config:
     return _GLOBAL_CONFIG
 
 
-class override:
+class override:  # noqa: N801
     """Context manager to temporarily override configuration values."""
 
     def __init__(self, **kwargs: Any) -> None:

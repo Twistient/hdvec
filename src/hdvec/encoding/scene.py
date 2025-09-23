@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Iterable
 
 import numpy as np
 
@@ -23,19 +23,19 @@ class FieldEncoder:
 
     def encode_grid(self, grid: np.ndarray) -> np.ndarray:
         arr = ensure_array(grid)
-        H, W = arr.shape[:2]
-        pos_grid = self.positional.sample_grid(H, W)
+        height, width = arr.shape[:2]
+        pos_grid = self.positional.sample_grid(height, width)
         scene = np.zeros(self.positional.D, dtype=np.complex64)
-        for i in range(H):
-            for j in range(W):
+        for i in range(height):
+            for j in range(width):
                 pos = pos_grid[i, j]
                 val = self._encode_value(arr[i, j])
                 scene += pos * val
         return scene.astype(np.complex64)
 
     def read_cell(self, scene: np.ndarray, i: int, j: int, size: tuple[int, int]) -> np.ndarray:
-        H, W = size
-        pos = self.positional.sample_grid(H, W)[i, j]
+        height, width = size
+        pos = self.positional.sample_grid(height, width)[i, j]
         probe = bind(scene, inv(pos))
         if self.value_codebook is not None:
             idx, score = Codebook(self.value_codebook).nearest(ensure_array(probe))
