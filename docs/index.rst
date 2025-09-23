@@ -6,6 +6,10 @@ Welcome to hdvec's documentation!
    :caption: Contents:
 
    quickstart_grid
+   lcc_demo
+   fpe_kernels
+   residue_torus_plan
+   decoding_resonators
 
 API
 ---
