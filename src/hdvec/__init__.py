@@ -81,7 +81,17 @@ from .encoding.vfa import (
     translate_grid,
 )
 from .encoding.scene import FieldEncoder
-from .ghrr import GHVec, gh_adj, gh_bind, gh_bundle, gh_commutativity, gh_similarity, gh_unbind, gh_project_unitary, sample_ghrr
+from .ghrr import (
+    GHVec,
+    gh_adj,
+    gh_bind,
+    gh_bundle,
+    gh_commutativity,
+    gh_similarity,
+    gh_unbind,
+    gh_project_unitary,
+    sample_ghrr,
+)
 from .permute import apply_perm, dihedral_permutations, roll
 
 __all__ = [

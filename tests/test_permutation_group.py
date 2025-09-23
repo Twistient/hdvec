@@ -19,4 +19,3 @@ def test_d4_group_relations():
         y = apply_perm(base, perms[name])
         y = apply_perm(y, perms[name])
         assert np.all(y == base)
-

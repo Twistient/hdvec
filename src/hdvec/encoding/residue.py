@@ -62,7 +62,9 @@ class ResidueEncoder:
         return encode_residue(x, self.bases)
 
 
-def encode_residue(x: int, bases: ResidueBases | np.ndarray, moduli: Iterable[int] | None = None) -> Vec:
+def encode_residue(
+    x: int, bases: ResidueBases | np.ndarray, moduli: Iterable[int] | None = None
+) -> Vec:
     """Encode integer ``x`` using residue bases."""
     stack, mods = _resolve_bases_and_moduli(bases, moduli)
     parts = []

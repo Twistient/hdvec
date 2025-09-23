@@ -58,9 +58,7 @@ def lep_step(
     return LEPModel(base=updated, beta=beta)
 
 
-def _sample_family(
-    family: str, dim: int, beta: float, rng: np.random.Generator
-) -> np.ndarray:
+def _sample_family(family: str, dim: int, beta: float, rng: np.random.Generator) -> np.ndarray:
     if family == "gaussian":
         return rng.normal(0.0, beta, size=dim)
     if family == "laplace":

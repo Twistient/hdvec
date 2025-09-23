@@ -64,7 +64,9 @@ def logic_not_vector(vec: np.ndarray, encoder: BooleanEncoder) -> np.ndarray:
     return encoder.encode(1 - idx)
 
 
-def _binary_logic(vec_a: np.ndarray, vec_b: np.ndarray, op: Callable[[int, int], int], encoder: BooleanEncoder) -> np.ndarray:
+def _binary_logic(
+    vec_a: np.ndarray, vec_b: np.ndarray, op: Callable[[int, int], int], encoder: BooleanEncoder
+) -> np.ndarray:
     a_bit = encoder.decode(vec_a)
     b_bit = encoder.decode(vec_b)
     return encoder.encode(op(a_bit, b_bit))

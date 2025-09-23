@@ -24,6 +24,7 @@ def dihedral_permutations(n: int) -> dict[str, np.ndarray]:
     to permute flattened n×n arrays. Names include: rot90, rot180, rot270,
     flipx, flipy, flipdiag, flipanti.
     """
+
     def build(transform: Callable[[int, int, int], tuple[int, int]]) -> np.ndarray:
         perm = np.empty(n * n, dtype=np.int64)
         for i in range(n):
