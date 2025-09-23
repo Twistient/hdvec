@@ -17,6 +17,7 @@ API
 .. automodule:: hdvec
    :members:
    :undoc-members:
+   :noindex:
 
 .. automodule:: hdvec.config
    :members:
