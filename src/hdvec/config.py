@@ -33,7 +33,7 @@ class Config:
     """
 
     D: int = 1024
-    backend: Literal["numpy", "torch"] = "numpy"
+    backend: str = "numpy"
     dtype: np.dtype[np.complexfloating[Any, Any]] = np.dtype(np.complex64)
     binding: Literal["hadamard", "cc", "lcc"] = "hadamard"
     dist: Literal["uniform", "cauchy"] = "uniform"
@@ -52,7 +52,7 @@ def get_config() -> Config:
     return _GLOBAL_CONFIG
 
 
-class override:
+class override:  # noqa: N801
     """Context manager to temporarily override configuration values."""
 
     def __init__(self, **kwargs: Any) -> None:

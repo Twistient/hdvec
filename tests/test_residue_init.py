@@ -16,4 +16,3 @@ def test_residue_initial_guess_matches_true_residues():
         guess = residue_initial_guess(v, bases)
         true = [x % m for m in moduli]
         assert guess == true
-

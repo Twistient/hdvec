@@ -9,7 +9,6 @@ from ..config import get_config
 from ..errors import BundlingModeError, ConfigurationError, InvalidBindingError, ShapeMismatchError
 from ..utils import ensure_array, phase_normalize
 
-
 __all__ = [
     "bind",
     "inv",
@@ -63,7 +62,7 @@ def unbind(a: np.ndarray | BaseVector, b: np.ndarray | BaseVector, *, op: str = 
     return bind(a, inv(b), op=op)
 
 
-def bundle(
+def bundle(  # noqa: C901
     *vectors: np.ndarray | BaseVector,
     normalize: str = "phasor",
     weights: np.ndarray | list[float] | tuple[float, ...] | None = None,
@@ -85,9 +84,7 @@ def bundle(
     if weights is not None:
         weights_arr = np.asarray(weights)
         if weights_arr.shape != (stack.shape[0],):
-            raise ShapeMismatchError(
-                "weights must be a 1-D array matching the number of vectors"
-            )
+            raise ShapeMismatchError("weights must be a 1-D array matching the number of vectors")
         weights_arr = weights_arr.astype(stack_dtype, copy=False)
         accum = np.tensordot(weights_arr, stack, axes=(0, 0))
         weight_sum = np.sum(weights_arr.real)

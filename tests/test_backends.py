@@ -2,7 +2,13 @@ import numpy as np
 import pytest
 
 from hdvec.config import override, get_config, set_backend_name
-from hdvec.core.backends import Backend, available_backends, get_backend, register_backend, set_backend
+from hdvec.core.backends import (
+    Backend,
+    available_backends,
+    get_backend,
+    register_backend,
+    set_backend,
+)
 from hdvec.errors import ConfigurationError
 
 

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Dict
+from types import ModuleType
 
 __all__ = [
     "Backend",
@@ -21,7 +22,7 @@ class Backend:
     name: str
     supports_complex64: bool = True
     supports_fft: bool = True
-    array_module: Callable[..., object] | None = None
+    array_module: ModuleType | Callable[..., object] | None = None
 
     def __post_init__(self) -> None:
         if self.array_module is None and self.name == "numpy":
@@ -30,7 +31,7 @@ class Backend:
             self.array_module = np
 
 
-_BACKENDS: Dict[str, Backend] = {}
+_BACKENDS: dict[str, Backend] = {}
 _CURRENT: str = "numpy"
 
 

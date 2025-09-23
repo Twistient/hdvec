@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 import numpy as np
 
 from ..core import bind
-from .residue import ResidueBases, encode_residue
 from ..utils import ensure_array
 from .fpe import encode_fpe_vec, generate_base
+from .residue import ResidueBases, encode_residue
 
 __all__ = ["Positional2DTorus", "ResidueTorus"]
 
@@ -32,10 +32,10 @@ class Positional2DTorus:
     def trans(self, dx: float, dy: float) -> np.ndarray:
         return self.pos(dx, dy)
 
-    def sample_grid(self, H: int, W: int) -> np.ndarray:
-        xs = np.linspace(0.0, 1.0, W, endpoint=False)
-        ys = np.linspace(0.0, 1.0, H, endpoint=False)
-        grid = np.empty((H, W, self.D), dtype=np.complex64)
+    def sample_grid(self, height: int, width: int) -> np.ndarray:
+        xs = np.linspace(0.0, 1.0, width, endpoint=False)
+        ys = np.linspace(0.0, 1.0, height, endpoint=False)
+        grid = np.empty((height, width, self.D), dtype=np.complex64)
         for i, y in enumerate(ys):
             for j, x in enumerate(xs):
                 grid[i, j] = self.pos(x, y)
@@ -49,7 +49,11 @@ class ResidueTorus(Positional2DTorus):
     def __post_init__(self) -> None:
         if self.moduli is None:
             raise ValueError("ResidueTorus requires moduli")
-        self.bases = ResidueBases.from_moduli(self.moduli, self.D)
+        moduli_list = list(self.moduli)
+        if not moduli_list:
+            raise ValueError("ResidueTorus requires at least one modulus")
+        self.moduli = moduli_list
+        self.bases = ResidueBases.from_moduli(moduli_list, self.D)
 
     def pos(self, x: float, y: float) -> np.ndarray:
         mods = self.bases.moduli

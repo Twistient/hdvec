@@ -7,6 +7,8 @@ hypervectors requires agreeing on a grid shape.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import numpy as np
 
 
@@ -22,20 +24,25 @@ def dihedral_permutations(n: int) -> dict[str, np.ndarray]:
     to permute flattened n×n arrays. Names include: rot90, rot180, rot270,
     flipx, flipy, flipdiag, flipanti.
     """
-    idx = np.arange(n * n)
-    grid = idx.reshape(n, n)
+
+    def build(transform: Callable[[int, int, int], tuple[int, int]]) -> np.ndarray:
+        perm = np.empty(n * n, dtype=np.int64)
+        for i in range(n):
+            for j in range(n):
+                src = i * n + j
+                dst_i, dst_j = transform(i, j, n)
+                dest = dst_i * n + dst_j
+                perm[dest] = src
+        return perm
+
     perms: dict[str, np.ndarray] = {}
-
-    # Rotations
-    perms["rot90"] = np.rot90(grid, k=1).ravel()
-    perms["rot180"] = np.rot90(grid, k=2).ravel()
-    perms["rot270"] = np.rot90(grid, k=3).ravel()
-
-    # Flips
-    perms["flipx"] = np.flipud(grid).ravel()
-    perms["flipy"] = np.fliplr(grid).ravel()
-    perms["flipdiag"] = np.transpose(grid).ravel()
-    perms["flipanti"] = np.fliplr(np.transpose(grid)).ravel()
+    perms["rot90"] = build(lambda i, j, m: (m - 1 - j, i))
+    perms["rot180"] = build(lambda i, j, m: (m - 1 - i, m - 1 - j))
+    perms["rot270"] = build(lambda i, j, m: (j, m - 1 - i))
+    perms["flipx"] = build(lambda i, j, m: (m - 1 - i, j))
+    perms["flipy"] = build(lambda i, j, m: (i, m - 1 - j))
+    perms["flipdiag"] = build(lambda i, j, m: (j, i))
+    perms["flipanti"] = build(lambda i, j, m: (m - 1 - j, m - 1 - i))
     return perms
 
 
