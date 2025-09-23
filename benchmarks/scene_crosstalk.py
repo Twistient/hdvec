@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Scene encoding cross-talk benchmark.
 
 Measures round-trip accuracy and cleanup margin versus fill ratio using

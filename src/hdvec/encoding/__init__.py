@@ -1,3 +1,4 @@
+# mypy: ignore-errors
 """Encoding utilities (FPE, residue, VFA, etc.)."""
 
 from .boolean import *  # noqa: F401,F403

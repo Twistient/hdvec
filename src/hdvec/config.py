@@ -33,7 +33,7 @@ class Config:
     """
 
     D: int = 1024
-    backend: Literal["numpy", "torch"] = "numpy"
+    backend: str = "numpy"
     dtype: np.dtype[np.complexfloating[Any, Any]] = np.dtype(np.complex64)
     binding: Literal["hadamard", "cc", "lcc"] = "hadamard"
     dist: Literal["uniform", "cauchy"] = "uniform"

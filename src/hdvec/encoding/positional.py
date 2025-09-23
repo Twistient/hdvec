@@ -49,7 +49,11 @@ class ResidueTorus(Positional2DTorus):
     def __post_init__(self) -> None:
         if self.moduli is None:
             raise ValueError("ResidueTorus requires moduli")
-        self.bases = ResidueBases.from_moduli(self.moduli, self.D)
+        moduli_list = list(self.moduli)
+        if not moduli_list:
+            raise ValueError("ResidueTorus requires at least one modulus")
+        self.moduli = moduli_list
+        self.bases = ResidueBases.from_moduli(moduli_list, self.D)
 
     def pos(self, x: float, y: float) -> np.ndarray:
         mods = self.bases.moduli

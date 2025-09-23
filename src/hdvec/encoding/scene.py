@@ -37,19 +37,23 @@ class FieldEncoder:
         height, width = size
         pos = self.positional.sample_grid(height, width)[i, j]
         probe = bind(scene, inv(pos))
+        probe_arr: np.ndarray = ensure_array(probe)
         if self.value_codebook is not None:
-            idx, score = Codebook(self.value_codebook).nearest(ensure_array(probe))
+            idx, score = Codebook(self.value_codebook).nearest(probe_arr)
             return np.array([idx, score], dtype=float)
-        return ensure_array(probe)
+        return probe_arr
 
     def translate(self, scene: np.ndarray, dx: float, dy: float) -> np.ndarray:
         shift = self.positional.trans(dx, dy)
-        return ensure_array(bind(scene, shift))
+        bound: np.ndarray = ensure_array(bind(scene, shift))
+        return bound
 
     def _encode_value(self, value: np.ndarray) -> np.ndarray:
         if self.value_codebook is not None:
             idx = int(value)
-            return self.value_codebook[idx]
+            return np.asarray(self.value_codebook[idx])
         if self.value_encoder is not None:
-            return ensure_array(self.value_encoder(float(value)))
-        return ensure_array(value)
+            encoded: np.ndarray = ensure_array(self.value_encoder(float(value)))
+            return encoded
+        result: np.ndarray = ensure_array(value)
+        return result

@@ -121,12 +121,14 @@ def readout(y_f: np.ndarray, s: float, base: np.ndarray) -> float:
 
 def shift(y_f: np.ndarray, delta: float, base: np.ndarray) -> np.ndarray:
     """Shift the represented function by ``delta`` using binding."""
-    return encode_fpe(delta, base) * ensure_array(y_f)
+    result: np.ndarray = encode_fpe(delta, base) * ensure_array(y_f)
+    return result
 
 
 def convolve(y_f: np.ndarray, y_g: np.ndarray) -> np.ndarray:
     """Convolve two function representations via elementwise multiply."""
-    return ensure_array(y_f) * ensure_array(y_g)
+    result: np.ndarray = ensure_array(y_f) * ensure_array(y_g)
+    return result
 
 
 def probe(y_f: np.ndarray, xs: Iterable[float], base: np.ndarray) -> np.ndarray:
@@ -146,7 +148,8 @@ def make_circular_base(d: int, period: int, rng: np.random.Generator | None = No
         rng = np.random.default_rng()
     js = rng.integers(0, period, size=d)
     angles = (2.0 * np.pi * js / float(period)).astype(np.float64)
-    return np.asarray(np.exp(1j * angles).astype(np.complex64))
+    base: np.ndarray = np.exp(1j * angles).astype(np.complex64)
+    return base
 
 
 def encode_circular(r: float, period: int, base_period: np.ndarray) -> np.ndarray:
@@ -155,8 +158,8 @@ def encode_circular(r: float, period: int, base_period: np.ndarray) -> np.ndarra
     Works for real or fractional r; periodicity holds with period L.
     """
     # Raising base to power r implicitly scales phase; periodicity follows from base roots.
-    out = (base_period**r).astype(np.complex64)
-    return np.asarray(out)
+    encoded: np.ndarray = (base_period**r).astype(np.complex64)
+    return encoded
 
 
 def encode_boolean(bit: int, base_l2: np.ndarray) -> np.ndarray:
