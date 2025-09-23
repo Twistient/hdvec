@@ -135,6 +135,12 @@ b = encoder.encode(0)
 result = logic_and(a, b, encoder)  # encodes 0
 ```
 
+See also `notebooks/scene_crosstalk.ipynb` for a round-trip accuracy and margin study using the scene encoder.
+
+**Benchmarks**
+
+Run `python -m benchmarks.scene_crosstalk --plot` to reproduce the cross-talk curves programmatically (round-trip accuracy and mean cleanup margin versus fill ratio).
+
 ## Use Cases
 
 - Structure‑aware perception and reasoning in high dimension
